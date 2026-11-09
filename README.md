@@ -1,56 +1,68 @@
 # Fnsoko Skills
 
-Money skills for your AI, from [Fnsoko Literacy Hub](#). They help you **know your numbers** and climb the **Money Ladder**: budgeting, saving, clearing debt, and growing your money. They're built for Kenyan money (M-Pesa, Fuliza, chamas, SACCOs, HELB) and the **Fnsoko Money Planner**.
+Money skills for your AI, from Fnsoko Literacy Hub. They help you **know your numbers** and climb the **Money Ladder**: budgeting, saving, clearing debt, and growing your money. They're built for Kenyan money (M-Pesa, Fuliza, chamas, SACCOs, HELB) and the **Fnsoko Money Planner**.
 
 > Fnsoko is not a financial adviser. These skills explain options and do the maths. Every decision is yours. They never recommend a specific fund, bank, lender or app.
 
 ## What's inside
 
+```
+fnsoko-skills/                      ← marketplace
+└── plugins/
+    └── fnsoko/                     ← plugin
+        └── skills/
+            └── fnsoko-money-coach/ ← skill
+```
+
 | Skill | What it does |
 |---|---|
-| `fnsoko-money-coach` | Reads your M-Pesa or bank statements, builds your money profile, plans your month, reviews it, and helps with your emergency fund, debt payoff, goals and retirement. Always ends with your Money Ladder step and your one next move. |
+| `fnsoko-money-coach` | Reads your M-Pesa or bank statements, builds your money profile, plans and reviews your month, and helps with your emergency fund, debt payoff, goals and retirement. Always ends with your Money Ladder step and your one next move. |
 
-More skills will be added here. When you update, you get them automatically.
+New skills get added to the `fnsoko` plugin over time.
 
 ## Step 1: Get the Fnsoko Money Planner
 
-Make your own copy of the planner (Google Sheets): **PLANNER_LINK**
-
-You can also download it as Excel from Google Sheets (File → Download → Microsoft Excel).
+**[Make your own copy of the Fnsoko Money Planner](https://docs.google.com/spreadsheets/d/10hyAqW-r_kK5tjseAC15GwyFMFDxmQzH9o7JRPFsaSw/copy)** (Google Sheets). To use it in Excel instead: File → Download → Microsoft Excel.
 
 ## Step 2: Install the skills
 
-### Claude Code (terminal or desktop app)
+### Claude Code
 
 ```
-/plugin marketplace add GITHUB_OWNER/fnsoko-skills
-/plugin install fnsoko@fnsoko
+/plugin marketplace add gwwaithaka/fnsoko-skills
+/plugin install fnsoko@fnsoko-skills
 ```
 
-To get the latest version later:
+Get updates later with:
 
 ```
-/plugin marketplace update fnsoko
+/plugin marketplace update fnsoko-skills
 ```
 
 ### Claude.ai (web, desktop and mobile apps)
 
-1. Download this repository: green **Code** button → **Download ZIP**.
-2. Unzip it. Inside `skills/`, zip the `fnsoko-money-coach` folder on its own.
-3. In Claude, go to **Settings → Capabilities → Skills**, choose **Upload skill**, and pick that zip.
-4. Start a chat and say: *"Help me get started with my money."*
+1. Download the skill zip from the [latest release](https://github.com/gwwaithaka/fnsoko-skills/releases/latest): `fnsoko-money-coach.zip`.
+2. In Claude, open **Settings → Capabilities → Skills**, choose **Upload skill**, and pick the zip.
+3. Start a chat and say: *"Help me get started with my money."*
 
 ### ChatGPT
 
-ChatGPT doesn't install Claude plugins. The skill is plain instructions, so you can still use it:
+ChatGPT supports the same open skill format ([Agent Skills](https://agentskills.io)).
 
-- Open `skills/fnsoko-money-coach/references/fallback-prompts.md` and copy the prompts into a chat, **or**
-- Create a Custom GPT and paste `SKILL.md` into its instructions, uploading the `references/` files as knowledge.
+1. Download `fnsoko-money-coach.zip` from the [latest release](https://github.com/gwwaithaka/fnsoko-skills/releases/latest).
+2. In ChatGPT, open **Skills → Create → Upload from your computer**, and pick the zip. On some workspace plans, an admin has to turn Skills on first.
+
+No Skills option? Use the copy-paste prompts in [`fallback-prompts.md`](plugins/fnsoko/skills/fnsoko-money-coach/references/fallback-prompts.md) instead.
+
+### Other AI tools
+
+Any tool that supports Agent Skills can use the `plugins/fnsoko/skills/fnsoko-money-coach` folder as it is.
 
 ## Privacy
 
-Never share passwords, PINs, one-time codes, ID numbers, or full account or phone numbers with any AI. If your statement PDF is locked, unlock it yourself first. The skill will never ask you for these details.
+Never share passwords, PINs, one-time codes, ID numbers, or full account or phone numbers with any AI. If your statement PDF is locked, unlock it yourself first. The skill will never ask you for these.
 
 ## Updates
 
-Fnsoko updates these skills over time. Claude Code users: run `/plugin marketplace update fnsoko`. Others: download the ZIP again.
+- **Claude Code:** run `/plugin marketplace update fnsoko-skills`.
+- **Claude.ai and ChatGPT:** download the newest zip from Releases and upload it again.
