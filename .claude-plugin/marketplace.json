@@ -1,13 +1,13 @@
 {
-  "name": "fnsoko-skills",
+  "name": "fnsoko",
   "description": "Fnsoko Literacy Hub: money skills for your AI, built for Kenyans.",
   "owner": {
-    "name": "Wanja, Fnsoko Literacy Hub"
+    "name": "Fnsoko Literacy Hub"
   },
   "plugins": [
     {
-      "name": "fnsoko",
-      "source": "./plugins/fnsoko",
+      "name": "fnsoko-money-skills",
+      "source": "./plugins/fnsoko-money-skills",
       "description": "Budgeting, saving, debt and the Money Ladder, with the Fnsoko Money Planner."
     }
   ]

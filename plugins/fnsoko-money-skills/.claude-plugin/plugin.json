@@ -1,13 +1,13 @@
 {
-  "name": "fnsoko",
-  "displayName": "Fnsoko",
+  "name": "fnsoko-money-skills",
+  "displayName": "Fnsoko Money Skills",
   "version": "1.0.0",
   "description": "Fnsoko money skills: budgeting, saving, debt and the Money Ladder, built for Kenyans and the Fnsoko Money Planner.",
   "author": {
-    "name": "Wanja, Fnsoko Literacy Hub",
-    "url": "https://github.com/gwwaithaka"
+    "name": "Fnsoko Literacy Hub",
+    "url": "https://github.com/Fnsoko"
   },
-  "homepage": "https://github.com/gwwaithaka/fnsoko-skills",
-  "repository": "https://github.com/gwwaithaka/fnsoko-skills",
+  "homepage": "https://github.com/Fnsoko/fnsoko-plugins",
+  "repository": "https://github.com/Fnsoko/fnsoko-plugins",
   "keywords": ["personal-finance", "budgeting", "saving", "debt", "kenya", "m-pesa", "fnsoko"]
 }
