@@ -2,7 +2,7 @@
 
 White boxes = the person types. Everything else fills itself in. The version is stored in `Workings!C205`; the skill only writes to v5.
 
-v5 has 17 tabs: Start Here (with the Ask Claude prompts at the bottom), My Money Ladder, My Money Profile, Setup, My Budget, Money Log, My Rules, This Month, Month-End Check (with the reflections at the bottom), My 50-30-20, My Year, My Net Worth, My Emergency Fund (deposits log at the bottom), My Goals (goal cards, then deposits log), My Loans (debt-free plan, then the month-by-month schedule), My Future, Workings (all the maths).
+v5 has 17 tabs (the SMS-ready copy adds an 18th, SMS Inbox, after Money Log): Start Here (with the Ask Claude prompts at the bottom), My Money Ladder, My Money Profile, Setup, My Budget, Money Log, My Rules, This Month, Month-End Check (with the reflections at the bottom), My 50-30-20, My Year, My Net Worth, My Emergency Fund (deposits log at the bottom), My Goals (goal cards, then deposits log), My Loans (debt-free plan, then the month-by-month schedule), My Future, Workings (all the maths).
 
 ## How the tabs feed each other
 
@@ -42,6 +42,7 @@ Savings into the emergency fund use the category chosen in My Emergency Fund H11
 | | C36:C50, E36:E50 | Need/Want for each Bills and Everyday category (same order) |
 | My Budget | C10:O24 / C29:O43 / C48:O62 / C67:O81 / C86:O100 | Income / Bills / Everyday / Savings / Debt; column C = usual each month, D..O = Jan..Dec overrides; rows follow Setup order |
 | Money Log | B10:F2009 | Date, Category, Amount (positive), Note, Added by (Claude / Me / Checked); G fills itself |
+| SMS Inbox *(SMS-ready planner only)* | B7:D | Received (filled by the script), Message (raw SMS, filled by the script), Logged (you: a date, or `Skipped: reason`). Header on row 6. No formula reads this tab, so the planner version stays v5. See `sms-inbox.md` |
 | My Rules | B12:D311 | Words to look for, Category, Notes (E checks the category exists) |
 | This Month | D6, J6 | Month to show, carry over Yes/No |
 | Month-End Check | B16:P23 | Spending accounts: Account, Type, Start (1 Jan), Jan..Dec end-of-month balances (E..P) |

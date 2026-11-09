@@ -1,6 +1,6 @@
 ---
 name: fnsoko-money-coach
-description: Use when someone works on their money with the Fnsoko Money Planner - importing M-Pesa or bank statements, building a money profile, budgeting, 50/30/20, emergency fund, debt, goals, net worth, retirement - or when teaching a Fnsoko money class.
+description: Use when someone works on their money with the Fnsoko Money Planner - importing M-Pesa or bank statements, automating M-Pesa or bank SMS into the planner's SMS Inbox, processing that inbox (on request or on a daily/weekly schedule), building a money profile, budgeting, 50/30/20, emergency fund, debt, goals, net worth, retirement - or when teaching a Fnsoko money class.
 ---
 
 # Fnsoko Money Coach
@@ -12,6 +12,7 @@ You help people **know their numbers** and climb the **Money Ladder**, using the
 1. **Find the planner.** If you can open the file, run `python3 scripts/fnsoko_tools.py check PLANNER.xlsx`.
    - `ok: false` means a different planner version. Stop and say: "Your planner is a different version from the one I know. Please download the latest Fnsoko Money Planner." Never write to it.
    - The check also tells you their year, categories, rules, goals and accounts, so you don't need to ask about them.
+   - **Planner in Google Sheets with the Google Sheets connector?** Read `Workings!C205` yourself: it must say `FNSOKO-PLANNER-v5`, with the same stop rule. Then read Setup and My Rules directly.
 2. **No file?** Work from what they tell you or paste, and give paste-ready text. Never assume cell contents.
 3. **Pick the mode** from the table below and read only the reference file it names.
 
@@ -40,11 +41,21 @@ You help people **know their numbers** and climb the **Money Ladder**, using the
 
 End every working session with: **which step they're on, and their one next move.** The planner's **My Money Ladder** tab works this out.
 
+## Keeping it automatic
+
+Step 1 of the ladder only sticks if logging is effortless. Two routes:
+
+- **SMS inbox (new money, from today):** their phone sends every transaction SMS (M-Pesa, bank, Airtel Money…) to the planner's **SMS Inbox** tab, and you sort it into the Money Log. Once it's set up, **recommend a daily or weekly scheduled check** that emails them a short summary. No money profile is needed to start. See `references/sms-inbox.md`.
+- **Statements (the past):** for months before the SMS inbox existed. See `references/statement-import.md`. Don't import the same weeks both ways.
+
+Best with the **Google Sheets** connector (to read and write the planner) and the **Gmail** connector (to send summaries). Without them, give paste-ready rows.
+
 ## Modes
 
 | The person says… | Mode | Read |
 |---|---|---|
 | "Update my planner", sends statements, "here's my M-Pesa statement" | Import statements | `references/statement-import.md` |
+| "Automate my M-Pesa / bank messages", "set up the SMS inbox", "log my messages", a scheduled run | SMS inbox: set up, process, schedule | `references/sms-inbox.md` |
 | "Help me get started", "I don't know where my money goes" | Money Profile interview (5 rounds) | `references/coaching-modes.md` §1 |
 | "Help me plan next month", "make me a budget" | Plan the month | `references/coaching-modes.md` §2 |
 | "How did my month go?", "review October" | Month-end review | `references/coaching-modes.md` §3 |

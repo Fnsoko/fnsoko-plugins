@@ -58,6 +58,16 @@ No Skills option? Use the copy-paste prompts in [`fallback-prompts.md`](plugins/
 
 Any tool that supports Agent Skills can use the `plugins/fnsoko-money-skills/skills/fnsoko-money-coach` folder as it is.
 
+## Automate your money messages (optional)
+
+Your phone can send every transaction SMS (M-Pesa, your bank, Airtel Money…) straight into your planner. Claude then sorts them into your Money Log on a daily or weekly schedule and sends you a short summary.
+
+1. Copy the **[SMS-ready Fnsoko Money Planner](https://docs.google.com/spreadsheets/d/1Fb0n-PXVEvoOjDiSHcSHXy6FjuaA6O8pRQlEPu_XDU8/copy)**. It includes the SMS Inbox tab and its script.
+2. In your copy: **Extensions → Apps Script → Deploy → New deployment → Web app** (Execute as Me, Who has access Anyone). Copy the link ending in `/exec`, and keep it private.
+3. **iPhone:** add the **[Fnsoko SMS Inbox Automation shortcut](https://www.icloud.com/shortcuts/44261bde5e94486da4ed7bfb3a656878)** and paste your `/exec` link when asked. Then make one automation per keyword: **Automation → Message → Message Contains** `M-PESA` (another for your bank's name) → Run Immediately → Run Shortcut.
+   **Android:** coming soon.
+4. In Claude, turn on the **Google Sheets** and **Gmail** connectors and say: *"Help me set up my SMS inbox."* The skill walks you through the rest and offers to schedule it.
+
 ## Privacy
 
 Never share passwords, PINs, one-time codes, ID numbers, or full account or phone numbers with any AI. If your statement PDF is locked, unlock it yourself first. The skill will never ask you for these.
