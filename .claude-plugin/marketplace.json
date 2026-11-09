@@ -1,0 +1,13 @@
+{
+  "name": "fnsoko",
+  "owner": {
+    "name": "Wanja, Fnsoko Literacy Hub"
+  },
+  "plugins": [
+    {
+      "name": "fnsoko",
+      "source": "./",
+      "description": "Fnsoko money skills: budgeting, saving, debt and the Money Ladder, with the Fnsoko Money Planner."
+    }
+  ]
+}

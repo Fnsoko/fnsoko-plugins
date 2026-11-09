@@ -1,0 +1,9 @@
+{
+  "name": "fnsoko",
+  "version": "1.0.0",
+  "description": "Fnsoko money skills for your AI: budgeting, saving, debt and the Money Ladder, built for Kenyans and the Fnsoko Money Planner.",
+  "author": {
+    "name": "Wanja, Fnsoko Literacy Hub"
+  },
+  "keywords": ["personal-finance", "budgeting", "saving", "debt", "kenya", "m-pesa", "fnsoko"]
+}
