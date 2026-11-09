@@ -42,7 +42,7 @@ Get updates later with:
 ### Claude.ai (web, desktop and mobile apps)
 
 1. Download the skill zip from the [latest release](https://github.com/gwwaithaka/fnsoko-skills/releases/latest): `fnsoko-money-coach.zip`.
-2. In Claude, open **Settings → Capabilities → Skills**, choose **Upload skill**, and pick the zip.
+2. In Claude, open **Customize → Skills** (on older versions: **Settings → Capabilities → Skills**), upload a skill, and pick the zip. Don't unzip it first.
 3. Start a chat and say: *"Help me get started with my money."*
 
 ### ChatGPT
