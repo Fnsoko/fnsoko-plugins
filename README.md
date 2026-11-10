@@ -22,7 +22,7 @@ New skills get added to Fnsoko Money Skills over time.
 
 ## Step 1: Get the Fnsoko Money Planner
 
-**[Make your own copy of the Fnsoko Money Planner](https://docs.google.com/spreadsheets/d/10hyAqW-r_kK5tjseAC15GwyFMFDxmQzH9o7JRPFsaSw/copy)** (Google Sheets). To use it in Excel instead: File → Download → Microsoft Excel.
+**[Make your own copy of the Fnsoko Money Planner](https://docs.google.com/spreadsheets/d/1Fb0n-PXVEvoOjDiSHcSHXy6FjuaA6O8pRQlEPu_XDU8/copy)** (Google Sheets). To use it in Excel instead: File → Download → Microsoft Excel.
 
 ## Step 2: Install the skills
 
@@ -33,17 +33,26 @@ New skills get added to Fnsoko Money Skills over time.
 /plugin install fnsoko-money-skills@fnsoko
 ```
 
-Get updates later with:
+Then turn on updates, once: run `/plugin`, open the **Marketplaces** tab, pick **fnsoko**, and choose **Enable auto-update**. (Claude Code leaves auto-update off for marketplaces outside Anthropic's own.)
 
-```
-/plugin marketplace update fnsoko
-```
+### Claude.ai and the Claude desktop app (recommended: updates itself)
 
-### Claude.ai (web, desktop and mobile apps)
+Add the Fnsoko marketplace once and new versions reach you on their own. The plugin is saved to your Claude account, so it also works in Cowork and Claude Code.
+
+1. In Claude, open **[Customize → Plugins](https://claude.ai/customize/plugins)**.
+2. Click **Add → Add marketplace** and paste `Fnsoko/fnsoko-plugins`.
+3. Turn on **Sync automatically**, so updates arrive without you doing anything.
+4. Add **Fnsoko Money Skills**.
+5. Start a chat and say: *"Help me get started with my money."*
+
+In the desktop app, [this link](https://claude.ai/desktop/customize/plugins/new?marketplace=Fnsoko/fnsoko-plugins&plugin=fnsoko-money-skills) fills in the marketplace for you.
+
+### Claude.ai: upload the skill instead (doesn't update)
+
+Only if you can't add a marketplace. An uploaded skill is a fixed copy: to get a newer version you have to upload it again.
 
 1. Download [`fnsoko-money-coach.zip`](https://github.com/Fnsoko/fnsoko-plugins/releases/latest/download/fnsoko-money-coach.zip).
 2. In Claude, open **Customize → Skills** (on older versions: **Settings → Capabilities → Skills**), upload a skill, and pick the zip. Don't unzip it first.
-3. Start a chat and say: *"Help me get started with my money."*
 
 ### ChatGPT
 
@@ -74,5 +83,10 @@ Never share passwords, PINs, one-time codes, ID numbers, or full account or phon
 
 ## Updates
 
-- **Claude Code:** run `/plugin marketplace update fnsoko`.
-- **Claude.ai and ChatGPT:** download the newest zip and upload it again.
+| How you installed | How you get updates |
+|---|---|
+| Claude.ai or desktop app, through the marketplace | Automatic with **Sync automatically** on. To pull the latest right away: **Customize → Plugins**, open the Fnsoko marketplace, **Check for updates**. |
+| Claude Code | Automatic once **Enable auto-update** is on (see above). To update now: `/plugin marketplace update fnsoko`. |
+| Uploaded zip (Claude.ai or ChatGPT) | No automatic updates. Download the newest zip and upload it again. |
+
+Already uploaded the zip to Claude? Remove that skill under **Customize → Skills**, then add the marketplace as above so you never have to re-upload.
