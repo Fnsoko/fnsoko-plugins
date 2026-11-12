@@ -2,7 +2,7 @@
 
 ## Versions
 
-- The planner stores its version in `Workings!C205` (now `FNSOKO-PLANNER-v5`). The script lists the versions it supports in `SUPPORTED_VERSIONS`, newest first.
+- The planner stores its version in `Workings!C205` (now `FNSOKO-PLANNER-v6`; v5 is the previous version). The script lists the versions it supports in `SUPPORTED_VERSIONS`, newest first.
 - **Policy: the skill supports the current and the previous planner version**, so nobody is cut off the day a new planner comes out.
 - **Prefer changes that keep the version.** Linking boxes with formulas, new help text, new dropdowns and extra tabs nothing reads (like SMS Inbox) all stay on the same version.
 - **Any change that moves an input cell, renames a tab or changes a special category = a new version.** When you make one:

@@ -20,7 +20,7 @@ from collections import defaultdict, OrderedDict
 # and drop the one before that. If the new version moves a cell this script reads or writes
 # (Setup categories, My Rules, Money Log, Month-End accounts, My Emergency Fund H11, My Goals C15:C26),
 # branch on info['version'] where that cell is used. See references/maintenance.md.
-SUPPORTED_VERSIONS = ('FNSOKO-PLANNER-v5',)
+SUPPORTED_VERSIONS = ('FNSOKO-PLANNER-v6', 'FNSOKO-PLANNER-v5')
 CURRENT_VERSION = SUPPORTED_VERSIONS[0]
 EXPECTED_VERSION = CURRENT_VERSION  # kept for older callers
 
@@ -943,6 +943,433 @@ def cmd_log(a):
     print(json.dumps({'ok': True, 'log': path}))
 
 
+# ----------------------------------------------------------------------------- insights
+# One command, many angles on the same data: leaks, pace, what-ifs, cash crunch, payday patterns,
+# health check, letter facts and investing readiness. Input = a planner .xlsx, or a JSON file Claude
+# builds from Google Sheets reads (shape in references/insights.md). Output = facts as JSON; Claude
+# writes the words. Every figure here is from the person's own log, so label it with `coverage`.
+
+INSIGHT_SPECIAL_IN = ('From my emergency fund', 'From my savings', 'Borrowed money')
+SMALL_SPEND_MAX = 1500      # a "small" spend, in their currency
+SMALL_SPEND_MIN_COUNT = 4   # this many in a month makes it worth showing
+PAYDAY_WINDOW = 5           # days from payday counted as "right after payday"
+
+
+def _month_key(d):
+    return f'{d.year:04d}-{d.month:02d}'
+
+
+def _days_in_month(y, m):
+    nxt = dt.date(y + (m == 12), m % 12 + 1, 1)
+    return (nxt - dt.timedelta(days=1)).day
+
+
+def _note_key(note, cat):
+    words = re.findall(r'[a-z]+', str(note or '').lower())
+    words = [w for w in words if w not in ('to', 'from', 'the', 'paid', 'payment', 'pay', 'for', 'mpesa', 'm', 'pesa')]
+    return ' '.join(words[:3]) or str(cat).lower()
+
+
+def _r(x):
+    return None if x is None else round(float(x), 2)
+
+
+def _p(x):
+    return None if x is None else round(float(x), 3)
+
+
+def insight_data_from_planner(path):
+    """Read everything the insights need from a downloaded planner (.xlsx with cached values)."""
+    info, _ = planner_info(path)
+    wb = load_planner(path, data_only=True)
+    ver = info['version']
+    su, ml = wb['Setup'], wb['Money Log']
+    needs = {}
+    for r in range(36, 51):
+        for nc, tc in (('B', 'C'), ('D', 'E')):
+            n, t = su[f'{nc}{r}'].value, su[f'{tc}{r}'].value
+            if n:
+                needs[str(n).strip()] = str(t or 'Need').strip()
+    log = []
+    for r in range(10, 2010):
+        d, c, a, n = to_date(ml[f'B{r}'].value), ml[f'C{r}'].value, to_amount(ml[f'D{r}'].value), ml[f'E{r}'].value
+        if d and c and a:
+            log.append({'date': d.strftime('%Y-%m-%d'), 'category': str(c).strip(), 'amount': abs(a), 'note': n or ''})
+    bu = wb['My Budget']
+    budget = {}
+    for top in (10, 29, 48, 67, 86):
+        for r in range(top, top + 15):
+            n = bu[f'B{r}'].value
+            if not n:
+                continue
+            months = {}
+            for i, col in enumerate('DEFGHIJKLMNO', start=1):
+                v = to_amount(bu[f'{col}{r}'].value)
+                if v is not None:
+                    months[str(i)] = v
+            budget[str(n).strip()] = {'usual': to_amount(bu[f'C{r}'].value) or 0, 'months': months}
+    pr = wb['My Money Profile']
+    v6 = ver == 'FNSOKO-PLANNER-v6'
+    inc_rows, bill_rows = (range(23, 38), range(43, 73)) if v6 else (range(23, 29), range(34, 44))
+    income_expected = [{'name': pr[f'B{r}'].value, 'amount': to_amount(pr[f'D{r}'].value) or 0, 'kind': pr[f'C{r}'].value}
+                       for r in inc_rows if pr[f'B{r}'].value and to_amount(pr[f'D{r}'].value)]
+    bills_due = []
+    for r in bill_rows:
+        n, a, day = pr[f'B{r}'].value, to_amount(pr[f'C{r}'].value), to_amount(pr[f'D{r}'].value)
+        if n and a:
+            bills_due.append({'name': n, 'amount': a, 'day': int(day) if day and 1 <= day <= 31 else None})
+    wk = wb['Workings']
+    ef = {'essentials': to_amount(wk['C214'].value) or 0, 'target': to_amount(wk['C215'].value) or 0,
+          'balance': to_amount(wk['C218'].value) or 0, 'category': info['ef_category']}
+    goals = []
+    for r in range(252, 264):
+        n = wk[f'B{r}'].value
+        if n:
+            dd = to_date(wk[f'D{r}'].value)
+            goals.append({'name': n, 'target': to_amount(wk[f'G{r}'].value) or 0, 'saved': to_amount(wk[f'H{r}'].value) or 0,
+                          'date': dd.strftime('%Y-%m-%d') if dd else None})
+    lo = wb['My Loans']
+    loans = []
+    for r in range(17, 25):
+        n, owe = lo[f'C{r}'].value, to_amount(lo[f'F{r}'].value)
+        if n and owe:
+            loans.append({'name': n, 'owe': owe, 'rate': to_amount(lo[f'G{r}'].value) or 0,
+                          'per': 'month' if str(lo[f'H{r}'].value or '').startswith('per month') else 'year',
+                          'payment': to_amount(lo[f'I{r}'].value) or 0})
+    me = wb['Month-End Check']
+    balances = {}
+    for i, col in enumerate('EFGHIJKLMNOP', start=1):
+        tot = [to_amount(me[f'{col}{r}'].value) for r in range(16, 24)]
+        tot = [x for x in tot if x is not None]
+        if tot:
+            balances[str(i)] = sum(tot)
+    not_logged = {str(i): to_amount(me[f'I{r}'].value) for i, r in enumerate(range(31, 43), start=1)
+                  if to_amount(me[f'I{r}'].value) is not None}
+    step = wk['C196'].value
+    fee_cat = next((c for c in sum(info['categories'].values(), []) if 'fee' in c.lower()), None)
+    return {'version': ver, 'year': info['year'], 'currency': info['currency'], 'categories': info['categories'],
+            'needs': needs, 'fees_category': fee_cat, 'log': log, 'budget': budget,
+            'income_expected': income_expected, 'bills_due': bills_due, 'emergency_fund': ef, 'goals': goals,
+            'loans': loans, 'month_end_balances': balances, 'not_logged': not_logged,
+            'ladder_step': int(step) if isinstance(step, (int, float)) else None,
+            'expensive_from': to_amount(wb['My Money Ladder']['G30'].value) or 0.2}
+
+
+def _kind(cat, data):
+    for g, lst in data['categories'].items():
+        if cat in lst:
+            return g
+    return 'Special' if cat in SPECIALS else None
+
+
+def _needwant(cat, kind, data):
+    if kind in ('Savings',):
+        return 'Future'
+    if kind == 'Debt':
+        return 'Need'
+    if kind in ('Bills', 'Everyday'):
+        return 'Want' if data.get('needs', {}).get(cat, 'Need').lower().startswith('want') else 'Need'
+    return None
+
+
+def _month_totals(rows, data):
+    t = defaultdict(float)
+    for x in rows:
+        k = _kind(x['category'], data)
+        if k == 'Income':
+            t['in'] += x['amount']
+        elif k in ('Bills', 'Everyday', 'Savings', 'Debt'):
+            t[k] += x['amount']
+            t[_needwant(x['category'], k, data)] += x['amount']
+        if x['category'] == data.get('fees_category'):
+            t['fees'] += x['amount']
+        if x['category'] == 'Borrowed money':
+            t['borrowed'] += x['amount']
+            t['borrow_count'] += 1
+    t['spending'] = t['Bills'] + t['Everyday']
+    t['out'] = t['spending'] + t['Savings'] + t['Debt']
+    return t
+
+
+def _budget_for(cat, month_no, data):
+    b = data.get('budget', {}).get(cat)
+    if not b:
+        return 0
+    if isinstance(b, (int, float)):
+        return float(b)
+    return float(b.get('months', {}).get(str(month_no), b.get('usual', 0)) or 0)
+
+
+def _months_to(target_left, monthly):
+    if target_left <= 0:
+        return 0
+    if monthly <= 0:
+        return None
+    return int(-(-target_left // monthly))
+
+
+def _payoff(loans, extra=0.0, cap=360):
+    """Avalanche payoff (highest monthly rate first). Returns (months, total interest) or (None, None)."""
+    ls = [{'owe': float(l['owe']), 'r': (l['rate'] if l.get('per') == 'month' else l['rate'] / 12), 'min': float(l.get('payment') or 0)}
+          for l in loans if l.get('owe')]
+    if not ls:
+        return 0, 0.0
+    budget = sum(l['min'] for l in ls) + extra
+    interest = 0.0
+    for m in range(1, cap + 1):
+        for l in ls:
+            if l['owe'] > 0:
+                i = l['owe'] * l['r']
+                interest += i
+                l['owe'] += i
+        left = budget
+        for l in ls:
+            p = min(l['min'], l['owe'], left)
+            l['owe'] -= p
+            left -= p
+        for l in sorted(ls, key=lambda z: -z['r']):
+            p = min(l['owe'], left)
+            l['owe'] -= p
+            left -= p
+        if all(l['owe'] <= 0.005 for l in ls):
+            return m, interest
+    return None, None
+
+
+def compute_insights(data, month=None, today=None, whatifs=()):
+    today = today or dt.date.today()
+    log = []
+    for x in data.get('log', []):
+        d = to_date(x.get('date'))
+        a = to_amount(x.get('amount'))
+        if d and a and x.get('category'):
+            log.append({'date': d.date(), 'category': str(x['category']).strip(), 'amount': abs(a), 'note': x.get('note') or ''})
+    if not log:
+        return {'ok': False, 'message': 'The Money Log is empty, so there is nothing to look at yet. Log a week first.'}
+    months = sorted({_month_key(x['date']) for x in log})
+    month = month or (_month_key(today) if _month_key(today) in months else months[-1])
+    y, mo = map(int, month.split('-'))
+    by_month = defaultdict(list)
+    for x in log:
+        by_month[_month_key(x['date'])].append(x)
+    rows = by_month.get(month, [])
+    tot = _month_totals(rows, data)
+    dim = _days_in_month(y, mo)
+    in_progress = (today.year, today.month) == (y, mo)
+    day = today.day if in_progress else dim
+    prev = [m for m in months if m < month][-3:]
+    cur = data.get('currency') or ''
+    out = {'ok': True, 'month': month, 'currency': cur, 'in_progress': in_progress, 'day_of_month': day, 'days_in_month': dim,
+           'totals': {k: _r(tot[k]) for k in ('in', 'out', 'spending', 'Need', 'Want', 'Future', 'Debt', 'fees')}}
+
+    # coverage: how much of the month the log explains
+    nl = (data.get('not_logged') or {}).get(str(mo))
+    if nl is not None and tot['out'] > 0:
+        out['coverage'] = {'not_logged': _r(nl), 'share_logged': _r(max(0.0, min(1.0, tot['out'] / (tot['out'] + max(0.0, nl))))),
+                           'label': 'VERIFIED' if abs(nl) < 1 else 'PROVISIONAL'}
+    else:
+        out['coverage'] = {'label': 'ESTIMATED', 'note': 'No Month-End Check balances for this month, so we can only see what was logged.'}
+
+    # 1. leaks
+    spend_rows = [x for x in rows if _kind(x['category'], data) in ('Bills', 'Everyday') and x['category'] != data.get('fees_category')]
+    groups = defaultdict(list)
+    for x in spend_rows:
+        groups[(x['category'], _note_key(x['note'], x['category']))].append(x['amount'])
+    small = sorted([{'category': c, 'what': k, 'times': len(v), 'total': _r(sum(v)), 'yearly_at_this_pace': _r(sum(v) * 12)}
+                    for (c, k), v in groups.items()
+                    if len(v) >= SMALL_SPEND_MIN_COUNT and sorted(v)[len(v) // 2] <= SMALL_SPEND_MAX],
+                   key=lambda z: -z['total'])[:5]
+    hist = defaultdict(lambda: defaultdict(list))
+    for m in prev + [month]:
+        for x in by_month.get(m, []):
+            if _kind(x['category'], data) in ('Bills', 'Everyday'):
+                hist[(x['category'], _note_key(x['note'], x['category']))][m].append(x['amount'])
+    subs = []
+    for (c, k), per in hist.items():
+        ms = [m for m, v in per.items() if len(v) == 1]
+        if len(ms) >= 2:
+            amts = [per[m][0] for m in ms]
+            if max(amts) <= min(amts) * 1.1:
+                subs.append({'category': c, 'what': k, 'need_or_want': _needwant(c, _kind(c, data), data), 'monthly': _r(sum(amts) / len(amts)), 'yearly': _r(sum(amts) / len(amts) * 12),
+                             'months_seen': len(ms)})
+    subs.sort(key=lambda z: (z['need_or_want'] != 'Want', -z['monthly']))
+    pricey = []
+    for l in data.get('loans', []):
+        if not l.get('rate'):
+            continue
+        monthly = l['rate'] if l.get('per') == 'month' else l['rate'] / 12
+        pricey.append({'loan': l['name'], 'rate_as_given': l['rate'], 'per': l.get('per', 'year'),
+                       'yearly_simple': _r(monthly * 12), 'yearly_compounded': _r((1 + monthly) ** 12 - 1),
+                       'interest_this_month': _r(l['owe'] * monthly), 'expensive': monthly * 12 >= (data.get('expensive_from') or 0.2)})
+    out['leaks'] = {
+        'fees': {'total': _r(tot['fees']), 'share_of_spending': _p(tot['fees'] / tot['spending']) if tot['spending'] else None,
+                 'category': data.get('fees_category')},
+        'borrowing': {'times': int(tot['borrow_count']), 'borrowed': _r(tot['borrowed'])},
+        'loan_costs': sorted(pricey, key=lambda z: -z['yearly_simple']),
+        'small_repeats': small, 'repeating_payments': subs[:8]}
+
+    # 2. pace forecast (or plan vs actual for a finished month)
+    cats, counts = defaultdict(float), defaultdict(int)
+    for x in rows:
+        if _kind(x['category'], data) in ('Bills', 'Everyday'):
+            cats[x['category']] += x['amount']
+            counts[x['category']] += 1
+    pace = []
+    allcats = set(cats) | {c for c in (data.get('budget') or {}) if _kind(c, data) in ('Bills', 'Everyday')}
+    for c in allcats:
+        spent, plan = cats.get(c, 0.0), _budget_for(c, mo, data)
+        # Bills and anything paid once so far are one-off payments: don't stretch them over the month.
+        if not in_progress:
+            proj = spent
+        elif _kind(c, data) == 'Bills' or counts.get(c, 0) <= 1:
+            proj = max(spent, plan)
+        else:
+            # Rest of the month = what they usually spend after this day (last 3 months); no history = straight line.
+            rest = [sum(x['amount'] for x in by_month[m] if x['category'] == c and x['date'].day > day) for m in prev]
+            proj = spent + sum(rest) / len(rest) if rest else spent * dim / day
+        if plan or spent:
+            pace.append({'category': c, 'spent': _r(spent), 'plan': _r(plan), 'heading_for': _r(proj),
+                         'over_by': _r(proj - plan) if plan and proj > plan * 1.1 and (not in_progress or day >= 7) else None,
+                         'unplanned': not plan and spent > 0})
+    plan_total = sum(_budget_for(c, mo, data) for c in allcats)
+    out['pace'] = {'share_of_month_gone': _p(day / dim), 'share_of_plan_spent': _p(tot['spending'] / plan_total) if plan_total else None,
+                   'too_early': in_progress and day < 7,
+                   'heading_over': sorted([p for p in pace if p['over_by']], key=lambda z: -z['over_by'])[:5],
+                   'unplanned': sorted([p for p in pace if p['unplanned']], key=lambda z: -z['spent'])[:5],
+                   'under_plan': sorted([p for p in pace if p['plan'] and p['heading_for'] < p['plan'] * 0.9], key=lambda z: z['heading_for'] - z['plan'])[:3]}
+
+    # 3. what-ifs: move X a month from a category to the fund, a goal, or the loans
+    ef = data.get('emergency_fund') or {}
+    ef_cat = ef.get('category')
+    def avg_into(cat):
+        ms = prev or [month]
+        return sum(x['amount'] for m in ms for x in by_month.get(m, []) if x['category'] == cat) / len(ms)
+    whats = []
+    for w in whatifs:
+        cat, _, amt = w.rpartition(':')
+        amt = to_amount(amt) or 0
+        res = {'move': _r(amt), 'from': cat or None, 'per_year': _r(amt * 12)}
+        if ef.get('target'):
+            left, now = ef['target'] - ef.get('balance', 0), avg_into(ef_cat) if ef_cat else 0
+            res['emergency_fund'] = {'months_now': _months_to(left, now), 'months_with_move': _months_to(left, now + amt)}
+        gl = []
+        for g in data.get('goals', []):
+            if g.get('target'):
+                left, now = g['target'] - g.get('saved', 0), avg_into(g['name'])
+                gl.append({'goal': g['name'], 'months_now': _months_to(left, now), 'months_with_move': _months_to(left, now + amt)})
+        res['goals'] = gl
+        if data.get('loans'):
+            m0, i0 = _payoff(data['loans'])
+            m1, i1 = _payoff(data['loans'], amt)
+            res['loans'] = {'months_now': m0, 'months_with_move': m1, 'interest_now': _r(i0), 'interest_with_move': _r(i1),
+                            'interest_saved': _r(i0 - i1) if i0 is not None and i1 is not None else None}
+        whats.append(res)
+    out['what_ifs'] = whats
+
+    # 4. cash crunch: bills due before the money arrives
+    pay_days = defaultdict(list)
+    for m in months[-4:]:
+        for x in by_month[m]:
+            if _kind(x['category'], data) == 'Income':
+                pay_days[x['category']].append(x['date'].day)
+    arrivals = []
+    for c, ds in pay_days.items():
+        typical = sorted(ds)[len(ds) // 2]
+        amount = sum(x['amount'] for m in months[-4:] for x in by_month[m] if x['category'] == c) / max(1, len({m for m in months[-4:] if any(z['category'] == c for z in by_month[m])}))
+        arrivals.append({'name': c, 'day': typical, 'amount': _r(amount)})
+    arrivals.sort(key=lambda z: z['day'])
+    bills = sorted([b for b in data.get('bills_due', []) if b.get('day')], key=lambda z: z['day'])
+    crunch = None
+    if arrivals and bills:
+        main = max(arrivals, key=lambda z: z['amount'])
+        before = [b for b in bills if b['day'] < main['day']]
+        early_in = sum(a['amount'] for a in arrivals if a['day'] <= (before[-1]['day'] if before else 0))
+        if before:
+            crunch = {'main_income': main['name'], 'arrives_day': main['day'], 'bills_before': before,
+                      'due_before_total': _r(sum(b['amount'] for b in before)), 'other_money_in_by_then': _r(early_in)}
+    out['cash_crunch'] = {'income_days': arrivals, 'bills_with_due_day': bills, 'crunch': crunch,
+                          'bills_missing_due_day': [b['name'] for b in data.get('bills_due', []) if not b.get('day')]}
+
+    # 5. payday and weekday patterns (last 3 full months, plus this one if finished)
+    pat = []
+    for m in (prev + ([] if in_progress else [month]))[-3:]:
+        mrows = by_month[m]
+        inc = [x for x in mrows if _kind(x['category'], data) == 'Income']
+        sp = [x for x in mrows if _kind(x['category'], data) in ('Bills', 'Everyday')]
+        if not inc or not sp:
+            continue
+        pd = max(inc, key=lambda z: z['amount'])['date']
+        win = sum(x['amount'] for x in sp if 0 <= (x['date'] - pd).days < PAYDAY_WINDOW)
+        pat.append({'month': m, 'payday': pd.isoformat(), 'share_spent_in_window': _p(win / sum(x['amount'] for x in sp))})
+    wd = defaultdict(float)
+    for m in (prev + [month])[-3:]:
+        for x in by_month[m]:
+            if _kind(x['category'], data) == 'Everyday':
+                wd[x['date'].strftime('%A')] += x['amount']
+    wtot = sum(wd.values())
+    out['patterns'] = {'payday_window_days': PAYDAY_WINDOW, 'after_payday': pat,
+                       'average_share_after_payday': _p(sum(p['share_spent_in_window'] for p in pat) / len(pat)) if pat else None,
+                       'busiest_day': max(wd, key=wd.get) if wd else None,
+                       'busiest_day_share': _p(max(wd.values()) / wtot) if wtot else None}
+
+    # 6. health check, month by month
+    trend = []
+    for m in (prev + [month]):
+        t = _month_totals(by_month[m], data)
+        done = not (m == month and in_progress)
+        ok = done and t['in'] > 0
+        trend.append({'month': m, 'complete': done, 'in': _r(t['in']), 'out': _r(t['out']),
+                      'savings_rate': _p(t['Savings'] / t['in']) if ok else None,
+                      'debt_to_income': _p(t['Debt'] / t['in']) if ok else None,
+                      'fees_share': _p(t['fees'] / t['spending']) if done and t['spending'] else None,
+                      'needs': _p(t['Need'] / t['in']) if ok else None, 'wants': _p(t['Want'] / t['in']) if ok else None,
+                      'future': _p(t['Future'] / t['in']) if ok else None})
+    ess = ef.get('essentials') or 0
+    out['health'] = {'months': trend, 'note': 'A month still in progress has no ratios: income often lands at the end.',
+                     'emergency_months': _r(ef.get('balance', 0) / ess) if ess else None,
+                     'guides': {'savings_rate': '20% or more', 'debt_to_income': 'under 30%', 'emergency_months': '3 to 6',
+                                'needs': '50% or less', 'wants': '30% or less'}}
+
+    # 7. investing readiness (education only, never a product)
+    step = data.get('ladder_step')
+    bal = data.get('month_end_balances') or {}
+    idle = None
+    if bal and ess:
+        recent = [bal[k] for k in sorted(bal, key=int)][-3:]
+        idle = _r(max(0.0, sum(recent) / len(recent) - ess))
+    out['investing'] = {'ladder_step': step, 'ready_to_learn': bool(step and step >= 4),
+                        'why_not_yet': None if (step and step >= 4) else 'Clear expensive debt and build a starter buffer first (ladder steps 1-3).',
+                        'idle_in_spending_accounts': idle}
+
+    # 8. facts for the month letter
+    wins = []
+    full = [t for t in trend if t['savings_rate'] is not None]
+    if len(full) > 1 and full[-1]['savings_rate'] > full[-2]['savings_rate']:
+        wins.append('Saved a bigger share of income than the month before')
+    if not in_progress:
+        wins += [f"{p['category']} under plan" for p in out['pace']['under_plan']]
+    biggest_leak = None
+    cands = [('fees', tot['fees'])] + [(f"{s['what']} ({s['category']}) x{s['times']}", s['total']) for s in small]
+    cands = [c for c in cands if c[1]]
+    if cands:
+        biggest_leak = max(cands, key=lambda z: z[1])
+    out['letter_facts'] = {'wins': wins[:3], 'biggest_leak': {'what': biggest_leak[0], 'amount': _r(biggest_leak[1])} if biggest_leak else None,
+                           'ladder_step': step}
+    return out
+
+
+def cmd_insights(a):
+    if a.planner:
+        data = insight_data_from_planner(a.planner)
+        require_supported(data['version'])
+    elif a.data:
+        data = json.load(open(a.data))
+    else:
+        fail('INPUT', 'Give --planner PLANNER.xlsx or --data DATA.json')
+    today = dt.datetime.strptime(a.today, '%Y-%m-%d').date() if a.today else None
+    print(json.dumps(compute_insights(data, a.month, today, a.whatif or ()), indent=1, ensure_ascii=False, default=str))
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest='cmd', required=True)
@@ -957,8 +1384,13 @@ def main():
     c = s.add_parser('export'); c.add_argument('sorted'); c.add_argument('--answers')
     c = s.add_parser('log'); c.add_argument('--folder', required=True); c.add_argument('--mode', required=True)
     c.add_argument('--rows-auto', type=int); c.add_argument('--questions', type=int); c.add_argument('--step', type=int); c.add_argument('--stuck')
+    c = s.add_parser('insights', help='leaks, pace, what-ifs, cash crunch, patterns, health check')
+    c.add_argument('--planner'); c.add_argument('--data', help='JSON built from Google Sheets reads (see references/insights.md)')
+    c.add_argument('--month', help='YYYY-MM (default: this month, or the last month logged)')
+    c.add_argument('--today', help='YYYY-MM-DD, for testing'); c.add_argument('--whatif', nargs='*', help='e.g. "Eating out:2000"')
     a = p.parse_args()
-    {'check': cmd_check, 'parse': cmd_parse, 'sort': cmd_sort, 'write': cmd_write, 'export': cmd_export, 'log': cmd_log}[a.cmd](a)
+    {'check': cmd_check, 'parse': cmd_parse, 'sort': cmd_sort, 'write': cmd_write, 'export': cmd_export, 'log': cmd_log,
+     'insights': cmd_insights}[a.cmd](a)
 
 
 if __name__ == '__main__':

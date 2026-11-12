@@ -98,10 +98,12 @@ The automation only feels automatic when you check the inbox for them. At the en
 - Don't add My Rules on your own. Suggest them in the summary.
 - **Email the summary** with Gmail, to the person's own address only. Never send to anyone else.
   - Subject: "Your Fnsoko money update: 3-9 Nov"
-  - Body:
-    - rows added
-    - money in and out
-    - biggest spending categories
+  - Body: the **weekly check-in** format in `insights.md` §3 (run `insights` after logging):
+    - coverage and rows added
+    - money in and out, and the month's pace
+    - the category heading over, or "on track"
+    - one leak or repeating payment worth a look
+    - a cash-crunch warning if a big bill is due before income in the next 7 days
     - what wasn't logged and why, as short questions
     - their Money Ladder step and one next move
   - No names, phone numbers, account numbers or codes in the email.

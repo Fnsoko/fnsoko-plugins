@@ -39,9 +39,10 @@ Run these checks as facts arrive: the leak; emergency cover; whether stated inco
 2. **Plan vs actual** where both exist. The 3 biggest differences.
 3. **50/30/20** and the **lifestyle check** (this month vs the 3 months before). If Wants grew faster than income, name it as lifestyle creep, kindly.
 4. **Ladder**: the step and one next move.
-5. **One lesson, up to 3 actions with dates.** Short answers to copy into the reflections at the bottom of Month-End Check (priorities, what went well, what to do better).
-6. **Raise or extra money coming?** Decide the split before it arrives (e.g. at least half to Future), using the raise planner on My 50-30-20.
-7. **Life changed** (new job, loan, baby, move)? Update the profile: old value → new value, then which tabs to update.
+5. **Insights** (`insights.md`): run `insights --month YYYY-MM` and add the leaks, the health-check trend and one what-if. Close with the **month letter** (`insights.md` §3).
+6. **One lesson, up to 3 actions with dates.** Short answers to copy into the reflections at the bottom of Month-End Check (priorities, what went well, what to do better).
+7. **Raise or extra money coming?** Decide the split before it arrives (e.g. at least half to Future), using the raise planner on My 50-30-20.
+8. **Life changed** (new job, loan, baby, move)? Update the profile: old value → new value, then which tabs to update.
 
 ## §4 Protect and grow
 
