@@ -1,0 +1,287 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Money Dashboard</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;0,800;1,400&display=swap">
+<!--
+  Fnsoko Money Dashboard template.
+  HOW TO FILL IT: replace everything between the two FNSOKO-DATA markers below with
+  {"name": "<first name or empty>", "made": "YYYY-MM-DD", "insights": <the JSON from `fnsoko_tools.py insights`>}
+  Change nothing else. Every number on the page comes from that JSON.
+-->
+<style>
+/* Layout: summary first (status chips, 4 tiles), then spending vs plan, where it goes, worth a look, what-if.
+   Brand = the planner: Alegreya Sans, dark-teal ink, Pacific-blue headers, lime strip.
+   Chart colours validated (dataviz validator): Needs / Wants / Future, light and dark steps. */
+:root {
+  --ink: #1B434D; --ink-2: #4E666B; --ink-3: #6E8386;
+  --bg: #FFFFFF; --panel: #F6FAFA; --rule: #D3DFE1; --head: #00A1AE; --on-head: #FFFFFF; --lime: #AED12F;
+  --bar: #00A1AE; --track: #E6EEEF; --plan: #1B434D;
+  --needs: #2B5F9E; --wants: #A3C232; --future: #00A1AE;
+  --good: #0ca30c; --warn: #fab219; --bad: #d03b3b;
+  --font: "Alegreya Sans", "Gill Sans", "Trebuchet MS", system-ui, sans-serif;
+  --gap: 16px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ink: #DCEEF0; --ink-2: #A9C0C4; --ink-3: #8AA3A7; --bg: #0E2228; --panel: #132C33; --rule: #284950;
+  --head: #0C949F; --on-head: #FFFFFF; --lime: #B9DB45; --bar: #18AAB6; --track: #1D3B42; --plan: #DCEEF0;
+  --needs: #5584CC; --wants: #83A01F; --future: #0C949F; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --ink: #DCEEF0; --ink-2: #A9C0C4; --ink-3: #8AA3A7; --bg: #0E2228; --panel: #132C33; --rule: #284950;
+  --head: #0C949F; --on-head: #FFFFFF; --lime: #B9DB45; --bar: #18AAB6; --track: #1D3B42; --plan: #DCEEF0;
+  --needs: #5584CC; --wants: #83A01F; --future: #0C949F; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.35; margin: 0; }
+.page { max-width: 1080px; margin: 0 auto; padding-block: 24px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: var(--gap); }
+.brand { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--head); }
+h1 { margin: 2px 0 0; font-size: clamp(26px, 4vw, 36px); font-weight: 800; line-height: 1.05; text-wrap: balance; }
+.strip { height: 6px; background: var(--lime); margin-top: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1.5px solid var(--rule); border-radius: 999px; font-size: 14px; font-weight: 700; }
+.chip i { font-style: normal; width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.chip small { font-weight: 400; color: var(--ink-2); }
+
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); }
+.tile { background: var(--panel); border-top: 4px solid var(--head); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile .k { font-size: 14px; font-weight: 700; color: var(--ink-2); }
+.tile .v { font-size: clamp(24px, 3.2vw, 32px); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tile .s { font-size: 13.5px; color: var(--ink-2); }
+
+.grid2 { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: var(--gap); align-items: stretch; }
+.card { border: 1.5px solid var(--rule); display: flex; flex-direction: column; min-width: 0; }
+.card > h2 { margin: 0; background: var(--head); color: var(--on-head); font-size: 16px; font-weight: 800; padding: 7px 12px; display: flex; justify-content: space-between; gap: 8px; }
+.card > h2 small { font-weight: 500; font-size: 13.5px; opacity: .95; }
+.body { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.note { margin: 0; font-size: 13.5px; color: var(--ink-2); font-style: italic; }
+
+/* spending vs plan: one bar per category, plan as a tick */
+.rows { display: flex; flex-direction: column; gap: 9px; }
+.row { display: grid; grid-template-columns: minmax(0, 9.5em) minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.row .name { font-weight: 700; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .num { font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; min-width: 7.5em; }
+.track { position: relative; height: 14px; background: var(--track); border-radius: 0 4px 4px 0; cursor: default; }
+.fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--bar); border-radius: 0 4px 4px 0; }
+.ahead { position: absolute; top: 3px; bottom: 3px; background: var(--bar); opacity: .35; border-radius: 0 4px 4px 0; }
+.tick { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--plan); }
+.flag { color: var(--bad); font-weight: 800; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 10px; display: inline-block; border-radius: 2px; }
+.paceline { display: grid; gap: 4px; font-size: 14px; }
+
+/* where it goes: 100% stacked bars, one per month */
+.stack { display: grid; grid-template-columns: 5.2em minmax(0, 1fr); gap: 8px; align-items: center; }
+.bar100 { display: flex; height: 22px; gap: 2px; }
+.bar100 > span { display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #FFFFFF; min-width: 0; overflow: hidden; }
+.bar100 > span:last-child { border-radius: 0 4px 4px 0; }
+.bar100 .w { color: #1B434D; }
+.guide { font-size: 13px; color: var(--ink-2); }
+details { font-size: 14px; } summary { cursor: pointer; font-weight: 700; color: var(--head); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-weight: 700; border-bottom: 1.5px solid var(--rule); padding: 4px 6px; }
+td { border-bottom: 1px solid var(--rule); padding: 4px 6px; }
+
+/* worth a look */
+.looks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.looks li { display: grid; grid-template-columns: 1.4em minmax(0, 1fr); gap: 8px; padding: 8px 0; border-top: 1px solid var(--rule); }
+.looks li:first-child { border-top: 0; padding-top: 0; }
+.looks .ic { font-weight: 800; color: var(--head); }
+.looks b { font-weight: 800; }
+.looks p { margin: 2px 0 0; font-size: 14px; color: var(--ink-2); }
+
+/* what-if */
+.whatif label { font-weight: 700; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.whatif output { font-size: 22px; font-weight: 800; color: var(--head); font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--head); height: 28px; }
+input[type=range]:focus-visible { outline: 2px solid var(--head); outline-offset: 2px; }
+.better { color: var(--good); font-weight: 800; }
+
+footer { font-size: 13px; color: var(--ink-3); font-style: italic; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; border-top: 1.5px solid var(--rule); padding-top: 10px; }
+#tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 13px; padding: 6px 8px; border-radius: 4px; max-width: 240px; z-index: 5; }
+
+@media (max-width: 860px) { .grid2 { grid-template-columns: minmax(0, 1fr); } .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 460px) { .row { grid-template-columns: minmax(0, 1fr) auto; } .row .track { grid-column: 1 / -1; grid-row: 2; } }
+@media (prefers-reduced-motion: no-preference) { .fill, .bar100 > span { transition: width .4s ease; } }
+</style>
+
+<!-- FNSOKO-DATA:START -->
+<script type="application/json" id="fnsoko-data">{"name": "", "made": "", "insights": {"ok": false, "message": "No data yet. Ask Claude: make my money dashboard."}}</script>
+<!-- FNSOKO-DATA:END -->
+
+<main class="page" id="app">
+  <header>
+    <p class="brand">Fnsoko Money Planner</p>
+    <h1 id="title">My money dashboard</h1>
+    <div class="strip" aria-hidden="true"></div>
+    <div class="chips" id="chips"></div>
+  </header>
+  <section class="tiles" id="tiles" aria-label="This month in numbers"></section>
+  <section class="grid2">
+    <div class="card"><h2>Spending against your plan <small id="paceSmall"></small></h2><div class="body" id="spend"></div></div>
+    <div class="card"><h2>Worth a look</h2><div class="body"><ul class="looks" id="looks"></ul></div></div>
+  </section>
+  <section class="grid2">
+    <div class="card"><h2>Where your money goes <small>share of money in</small></h2><div class="body" id="split"></div></div>
+    <div class="card whatif"><h2>What if I moved some money?</h2><div class="body" id="whatif"></div></div>
+  </section>
+  <footer id="foot"></footer>
+</main>
+<div id="tip" hidden></div>
+
+<script>
+(function () {
+  var raw = {};
+  try { raw = JSON.parse(document.getElementById('fnsoko-data').textContent); } catch (e) { raw = {}; }
+  var D = raw.insights || {};
+  var app = document.getElementById('app');
+  if (!D.ok) { app.querySelector('#tiles').innerHTML = '<p class="note">' + esc(D.message || 'No data yet.') + '</p>'; return; }
+  var CUR = D.currency || '';
+  var STEPS = ['Know my numbers', 'Starter buffer', 'Clear expensive debt', 'Full emergency fund', 'Live on 50/30/20', 'Goals on track', 'Retirement on track'];
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function money(n) { return (CUR ? CUR + ' ' : '') + Math.round(n || 0).toLocaleString('en-KE'); }
+  function pct(x) { return x == null ? '–' : Math.round(x * 100) + '%'; }
+  function monthName(k) { var p = String(k).split('-'); return MONTHS[+p[1] - 1] + ' ' + p[0]; }
+  function short(k) { var p = String(k).split('-'); return MONTHS[+p[1] - 1].slice(0, 3); }
+
+  // header
+  var name = (raw.name || '').trim();
+  document.getElementById('title').textContent = (name ? name + "'s money" : 'My money') + ': ' + monthName(D.month);
+  var cov = D.coverage || {};
+  var covColor = cov.label === 'VERIFIED' ? 'var(--good)' : (cov.label === 'PROVISIONAL' ? 'var(--warn)' : 'var(--ink-3)');
+  var covIcon = cov.label === 'VERIFIED' ? '✓' : (cov.label === 'PROVISIONAL' ? '!' : '~');
+  var covText = cov.label === 'PROVISIONAL' && cov.share_logged != null ? 'about ' + pct(cov.share_logged) + ' logged' :
+    (cov.label === 'VERIFIED' ? 'it adds up' : 'no month-end balances yet');
+  var step = (D.investing || {}).ladder_step;
+  var chips = '<span class="chip"><i style="background:' + covColor + '"></i>' + covIcon + ' ' + esc(cov.label || 'ESTIMATED') + ' <small>' + esc(covText) + '</small></span>';
+  if (step) chips += '<span class="chip"><i style="background:var(--lime)"></i>Step ' + Math.min(step, 7) + ' of 7 <small>' + esc(STEPS[Math.min(step, 7) - 1]) + '</small></span>';
+  if (D.in_progress) chips += '<span class="chip"><i style="background:var(--head)"></i>Day ' + D.day_of_month + ' of ' + D.days_in_month + ' <small>month in progress</small></span>';
+  document.getElementById('chips').innerHTML = chips;
+
+  // tiles
+  var T = D.totals || {}, H = D.health || {}, full = (H.months || []).filter(function (m) { return m.savings_rate != null; });
+  var last = full.length ? full[full.length - 1] : null;
+  var sr = D.in_progress ? (last ? last.savings_rate : null) : (T['in'] ? T.Future / T['in'] : null);
+  var srNote = D.in_progress ? (last ? 'last full month (' + short(last.month) + '). Guide: 20%+' : 'Guide: 20% or more') : 'Guide: 20% or more';
+  var em = H.emergency_months;
+  var tiles = [
+    ['Money in', money(T['in']), D.in_progress ? 'so far this month' : 'this month'],
+    ['Money out', money(T.out), 'spending ' + money(T.spending) + ' · fees ' + money(T.fees)],
+    ['Saved', pct(sr), srNote],
+    ['Emergency fund', em == null ? '–' : em.toFixed(1) + ' months', 'of essentials. Guide: 3 to 6']
+  ];
+  document.getElementById('tiles').innerHTML = tiles.map(function (t) {
+    return '<div class="tile"><span class="k">' + t[0] + '</span><span class="v">' + esc(t[1]) + '</span><span class="s">' + esc(t[2]) + '</span></div>';
+  }).join('');
+
+  // spending vs plan
+  var P = D.pace || {}, all = (P.all || []).filter(function (r) { return r.plan || r.spent; });
+  var maxv = Math.max.apply(null, all.map(function (r) { return Math.max(r.plan || 0, r.heading_for || 0, r.spent || 0); }).concat([1]));
+  document.getElementById('paceSmall').textContent = D.in_progress ? pct(P.share_of_month_gone) + ' of the month gone' : 'month finished';
+  var sp = '';
+  if (D.in_progress && P.share_of_plan_spent != null) {
+    sp += '<div class="paceline"><span><b>' + pct(P.share_of_plan_spent) + '</b> of your spending plan used, with ' + pct(P.share_of_month_gone) + ' of the month gone.</span></div>';
+  }
+  sp += '<div class="rows">' + all.map(function (r) {
+    var over = r.over_by != null;
+    var w = (r.spent / maxv) * 100, a = ((r.heading_for || r.spent) / maxv) * 100, t = r.plan ? (r.plan / maxv) * 100 : null;
+    var tipTxt = r.category + ': spent ' + money(r.spent) + (r.plan ? ' of ' + money(r.plan) + ' planned' : ', no plan') +
+      (D.in_progress && r.heading_for > r.spent ? '. Heading for about ' + money(r.heading_for) : '') + (over ? '. About ' + money(r.over_by) + ' over.' : '.');
+    return '<div class="row"><span class="name" title="' + esc(r.category) + '">' + esc(r.category) + '</span>' +
+      '<div class="track" data-tip="' + esc(tipTxt) + '" tabindex="0" aria-label="' + esc(tipTxt) + '">' +
+      (D.in_progress && a > w ? '<span class="ahead" style="left:' + w + '%;width:' + (a - w) + '%"></span>' : '') +
+      '<span class="fill" style="width:' + w + '%"></span>' + (t != null ? '<span class="tick" style="left:calc(' + t + '% - 1px)"></span>' : '') + '</div>' +
+      '<span class="num">' + money(r.spent) + (over ? ' <span class="flag">▲ ' + (D.in_progress ? 'heading over' : 'over') + '</span>' : '') + '</span></div>';
+  }).join('') + '</div>';
+  sp += '<div class="legend"><span><i class="sw" style="background:var(--bar)"></i>Spent</span>' +
+    (D.in_progress ? '<span><i class="sw" style="background:var(--bar);opacity:.35"></i>Heading for, at your usual pace</span>' : '') +
+    '<span><i class="sw" style="background:var(--plan);width:3px"></i>Plan</span><span class="flag">▲ over plan</span></div>';
+  if ((P.plan_looks_off || []).length) sp += '<p class="note">Your plan for ' + P.plan_looks_off.map(function (x) { return esc(x.category); }).join(', ') + ' is far from what you usually pay, so those bars may mislead. Update My Budget.</p>';
+  document.getElementById('spend').innerHTML = all.length ? sp : '<p class="note">No spending logged yet this month.</p>';
+
+  // worth a look
+  var L = D.leaks || {}, items = [];
+  var cc = (D.cash_crunch || {}).upcoming || [];
+  cc.forEach(function (b) { items.push(['!', b.name + ' due ' + (b.due_in_days === 0 ? 'today' : 'in ' + b.due_in_days + ' days'), money(b.amount) + ', before your main income arrives. Keep it aside.']); });
+  (L.loan_costs || []).filter(function (l) { return l.expensive; }).forEach(function (l) {
+    items.push(['%', l.loan + ': about ' + Math.round(l.yearly_simple * 100) + '% a year', (l.per === 'month' ? Math.round(l.rate_as_given * 1000) / 10 + '% a month' : '') + ' (' + Math.round(l.yearly_compounded * 100) + '% when it compounds). Clearing it is Ladder step 3.']);
+  });
+  if (L.fees && L.fees.total) items.push(['¤', money(L.fees.total) + ' in fees', 'M-Pesa and bank charges' + (L.fees.share_of_spending != null ? ', ' + (L.fees.share_of_spending * 100).toFixed(1) + '% of spending' : '') + '. Fewer, bigger transfers usually cost less.']);
+  (L.small_repeats || []).slice(0, 2).forEach(function (s) { items.push(['×', s.what.charAt(0).toUpperCase() + s.what.slice(1) + ' ' + s.times + ' times: ' + money(s.total), 'About ' + money(s.yearly_at_this_pace) + ' a year at this pace. Your call: is it worth it to you?']); });
+  (L.repeating_payments || []).filter(function (r) { return r.need_or_want === 'Want'; }).slice(0, 2).forEach(function (r) { items.push(['↻', r.what.charAt(0).toUpperCase() + r.what.slice(1) + ': ' + money(r.monthly) + ' every month', money(r.yearly) + ' a year. Still using it?']); });
+  var pat = D.patterns || {};
+  if (pat.average_share_after_payday != null) items.push(['◷', pct(pat.average_share_after_payday) + ' of spending happens in the ' + pat.payday_window_days + ' days after payday', 'Paying yourself first, on payday, protects your savings.']);
+  ((D.log_checks || {}).possible_duplicates || []).slice(0, 1).forEach(function (x) { items.push(['?', 'Possible duplicate: ' + x.category + ' ' + money(x.amount) + ' on ' + x.date, 'Logged ' + x.times + ' times. Check your Money Log; delete one only if it really is a repeat.']); });
+  document.getElementById('looks').innerHTML = items.length ? items.slice(0, 6).map(function (i) {
+    return '<li><span class="ic" aria-hidden="true">' + i[0] + '</span><div><b>' + esc(i[1]) + '</b><p>' + esc(i[2]) + '</p></div></li>';
+  }).join('') : '<li><span class="ic">✓</span><div><b>Nothing stands out</b><p>No fees, pricey loans or repeat spends worth flagging this month.</p></div></li>';
+
+  // where your money goes
+  var months = (H.months || []).filter(function (m) { return m.needs != null; });
+  var sh = '';
+  if (months.length) {
+    sh += months.map(function (m) {
+      var n = Math.max(0, m.needs || 0), w = Math.max(0, m.wants || 0), f = Math.max(0, m.future || 0), s = Math.max(1, n + w + f);
+      var seg = function (cls, v, col, label) { return v > 0 ? '<span class="' + cls + '" style="width:' + (v / s * 100) + '%;background:' + col + '" data-tip="' + esc(short(m.month) + ': ' + label + ' ' + pct(v) + ' of money in') + '">' + (v / s > 0.12 ? pct(v) : '') + '</span>' : ''; };
+      return '<div class="stack"><span>' + short(m.month) + '</span><div class="bar100" aria-label="' + esc(monthName(m.month) + ': needs ' + pct(n) + ', wants ' + pct(w) + ', future ' + pct(f)) + '">' +
+        seg('n', n, 'var(--needs)', 'Needs') + seg('w', w, 'var(--wants)', 'Wants') + seg('f', f, 'var(--future)', 'Future') + '</div></div>';
+    }).join('');
+    sh += '<div class="legend"><span><i class="sw" style="background:var(--needs)"></i>Needs (guide 50% or less)</span><span><i class="sw" style="background:var(--wants)"></i>Wants (30% or less)</span><span><i class="sw" style="background:var(--future)"></i>Future (20% or more)</span></div>';
+    sh += '<details><summary>Show as a table</summary><table><thead><tr><th>Month</th><th>Needs</th><th>Wants</th><th>Future</th><th>Fees</th></tr></thead><tbody>' +
+      months.map(function (m) { return '<tr><td>' + short(m.month) + '</td><td>' + pct(m.needs) + '</td><td>' + pct(m.wants) + '</td><td>' + pct(m.future) + '</td><td>' + (m.fees_share == null ? '–' : (m.fees_share * 100).toFixed(1) + '%') + '</td></tr>'; }).join('') + '</tbody></table></details>';
+    sh += '<p class="note">Each bar is a finished month. Shares are of money in, so they can add up to less than 100% when money is left over.</p>';
+  } else sh = '<p class="note">This fills in once you have a full month logged.</p>';
+  document.getElementById('split').innerHTML = sh;
+
+  // what-if
+  var V = D.levers || {}, ef = V.emergency_fund, goals = V.goals || [], loans = V.loans || [];
+  function monthsTo(left, per) { if (left <= 0) return 0; if (per <= 0) return null; return Math.ceil(left / per); }
+  function fmtM(m) { if (m == null) return 'not at this pace'; if (m === 0) return 'done'; return m < 12 ? m + ' months' : (m / 12).toFixed(1).replace('.0', '') + ' years'; }
+  function payoff(extra) {
+    var ls = loans.filter(function (l) { return l.owe > 0; }).map(function (l) { return { owe: l.owe, r: l.monthly_rate || 0, min: l.payment || 0 }; });
+    if (!ls.length) return null;
+    var budget = ls.reduce(function (a, l) { return a + l.min; }, 0) + extra, interest = 0;
+    for (var m = 1; m <= 360; m++) {
+      ls.forEach(function (l) { if (l.owe > 0) { var i = l.owe * l.r; interest += i; l.owe += i; } });
+      var left = budget;
+      ls.forEach(function (l) { var p = Math.min(l.min, l.owe, left); l.owe -= p; left -= p; });
+      ls.slice().sort(function (a, b) { return b.r - a.r; }).forEach(function (l) { var p = Math.min(l.owe, left); l.owe -= p; left -= p; });
+      if (ls.every(function (l) { return l.owe <= 0.005; })) return { months: m, interest: interest };
+    }
+    return { months: null, interest: null };
+  }
+  var wi = '<label for="amt">Move this much a month <output id="amtOut" for="amt">' + money(2000) + '</output></label>' +
+    '<input id="amt" type="range" min="0" max="10000" step="500" value="2000" aria-describedby="wiNote">' +
+    '<table><thead><tr><th>Put it towards</th><th>Now</th><th>With it</th></tr></thead><tbody id="wiRows"></tbody></table>' +
+    '<p class="note" id="wiNote">Pick one place for the money; each row shows that choice on its own. Never cut a real need to find it.</p>';
+  document.getElementById('whatif').innerHTML = (ef || goals.length || loans.length) ? wi : '<p class="note">Add an emergency fund target, a goal or a loan to your Profile to try this.</p>';
+  function drawWhatIf() {
+    var x = +document.getElementById('amt').value, rows = '';
+    document.getElementById('amtOut').textContent = money(x);
+    if (ef) { var a = monthsTo(ef.left, ef.monthly_now), b = monthsTo(ef.left, ef.monthly_now + x); rows += row('Emergency fund', fmtM(a), fmtM(b), a !== b); }
+    goals.forEach(function (g) { var a = monthsTo(g.left, g.monthly_now), b = monthsTo(g.left, g.monthly_now + x); rows += row(g.name, fmtM(a), fmtM(b), a !== b); });
+    if (loans.length) {
+      var p0 = payoff(0), p1 = payoff(x);
+      rows += row('Clear my loans', fmtM(p0 && p0.months), fmtM(p1 && p1.months), p0 && p1 && p0.months !== p1.months);
+      if (p0 && p1 && p0.interest != null && p1.interest != null && p0.interest - p1.interest >= 1) rows += row('Interest saved', '', money(p0.interest - p1.interest), true);
+    }
+    document.getElementById('wiRows').innerHTML = rows;
+  }
+  function row(a, b, c, better) { return '<tr><td>' + esc(a) + '</td><td>' + esc(b) + '</td><td' + (better ? ' class="better"' : '') + '>' + esc(c) + '</td></tr>'; }
+  if (document.getElementById('amt')) { document.getElementById('amt').addEventListener('input', drawWhatIf); drawWhatIf(); }
+
+  // footer
+  document.getElementById('foot').innerHTML = '<span>Made ' + esc(raw.made || '') + ' from your Fnsoko Money Planner. A snapshot: your planner stays your record.</span><span>Not financial advice. Check the numbers against your planner.</span>';
+
+  // hover tooltips
+  var tip = document.getElementById('tip');
+  function show(e) { var t = e.target.closest('[data-tip]'); if (!t) { tip.hidden = true; return; } tip.textContent = t.getAttribute('data-tip'); tip.hidden = false;
+    var x = (e.clientX || t.getBoundingClientRect().left) + 12, y = (e.clientY || t.getBoundingClientRect().top) + 14;
+    tip.style.left = Math.min(x, window.innerWidth - 250) + 'px'; tip.style.top = y + 'px'; }
+  app.addEventListener('pointermove', show); app.addEventListener('pointerleave', function () { tip.hidden = true; });
+  app.addEventListener('focusin', show); app.addEventListener('focusout', function () { tip.hidden = true; });
+})();
+</script>

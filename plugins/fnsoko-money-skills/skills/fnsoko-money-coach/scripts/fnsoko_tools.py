@@ -1323,6 +1323,7 @@ def compute_insights(data, month=None, today=None, whatifs=()):
                 plan_off.append({'category': c, 'plan': _r(plan), 'usual_logged': _r(avg)})
     out['pace'] = {'share_of_month_gone': _p(day / dim), 'share_of_plan_spent': _p(tot['spending'] / plan_total) if plan_total else None,
                    'too_early': in_progress and day < 7, 'plan_looks_off': plan_off,
+                   'all': sorted(pace, key=lambda z: -(z['plan'] or z['spent'])),
                    'heading_over': sorted([p for p in pace if p['over_by']], key=lambda z: -z['over_by'])[:5],
                    'unplanned': sorted([p for p in pace if p['unplanned']], key=lambda z: -z['spent'])[:5],
                    'under_plan': sorted([p for p in pace if p['plan'] and p['heading_for'] < p['plan'] * 0.9], key=lambda z: z['heading_for'] - z['plan'])[:3]}
@@ -1354,6 +1355,16 @@ def compute_insights(data, month=None, today=None, whatifs=()):
                             'interest_saved': _r(i0 - i1) if i0 is not None and i1 is not None else None}
         whats.append(res)
     out['what_ifs'] = whats
+    # the raw levers, so a dashboard can redo the what-ifs live for any amount
+    out['levers'] = {
+        'emergency_fund': ({'target': _r(ef.get('target')), 'balance': _r(ef.get('balance', 0)),
+                            'left': _r(max(0.0, ef['target'] - ef.get('balance', 0))), 'monthly_now': _r(avg_into(ef_cat) if ef_cat else 0)}
+                           if ef.get('target') else None),
+        'goals': [{'name': g['name'], 'target': _r(g['target']), 'saved': _r(g.get('saved', 0)),
+                   'left': _r(max(0.0, g['target'] - g.get('saved', 0))), 'monthly_now': _r(avg_into(g['name'])), 'date': g.get('date')}
+                  for g in data.get('goals', []) if g.get('target')],
+        'loans': [{'name': l['name'], 'owe': _r(l['owe']), 'monthly_rate': _p(l['rate'] if l.get('per') == 'month' else l['rate'] / 12),
+                   'payment': _r(l.get('payment') or 0)} for l in data.get('loans', [])]}
 
     # 4. cash crunch: bills due before the money arrives
     pay_days = defaultdict(list)
@@ -1471,6 +1482,28 @@ def cmd_insights(a):
     print(json.dumps(compute_insights(data, a.month, today, a.whatif or ()), indent=1, ensure_ascii=False, default=str))
 
 
+def cmd_dashboard(a):
+    """Fill assets/dashboard-template.html with this person's insights. Output = one self-contained HTML file."""
+    if a.planner:
+        data = insight_data_from_planner(a.planner)
+        require_supported(data['version'])
+    elif a.data:
+        data = json.load(open(a.data))
+    else:
+        fail('INPUT', 'Give --planner PLANNER.xlsx or --data DATA.json')
+    today = dt.datetime.strptime(a.today, '%Y-%m-%d').date() if a.today else dt.date.today()
+    ins = compute_insights(data, a.month, today, ())
+    tpl_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'assets', 'dashboard-template.html')
+    tpl = open(tpl_path, encoding='utf-8').read()
+    start, end = '<!-- FNSOKO-DATA:START -->', '<!-- FNSOKO-DATA:END -->'
+    i, j = tpl.index(start), tpl.index(end)
+    blob = json.dumps({'name': a.name or '', 'made': today.isoformat(), 'insights': ins}, ensure_ascii=False, default=str)
+    blob = blob.replace('</', '<\\/')  # never close the script tag early
+    html_out = tpl[:i] + start + '\n<script type="application/json" id="fnsoko-data">' + blob + '</script>\n' + tpl[j:]
+    open(a.out, 'w', encoding='utf-8').write(html_out)
+    print(json.dumps({'ok': ins.get('ok', False), 'saved': a.out, 'month': ins.get('month'), 'message': ins.get('message')}))
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest='cmd', required=True)
@@ -1489,8 +1522,11 @@ def main():
     c.add_argument('--planner'); c.add_argument('--data', help='JSON built from Google Sheets reads (see references/insights.md)')
     c.add_argument('--month', help='YYYY-MM (default: this month, or the last month logged)')
     c.add_argument('--today', help='YYYY-MM-DD, for testing'); c.add_argument('--whatif', nargs='*', help='e.g. "Eating out:2000"')
+    c = s.add_parser('dashboard', help='insights as a ready-to-publish HTML dashboard')
+    c.add_argument('--planner'); c.add_argument('--data'); c.add_argument('--month'); c.add_argument('--today')
+    c.add_argument('--name', help="the person's first name for the title (optional)"); c.add_argument('--out', required=True)
     a = p.parse_args()
-    {'check': cmd_check, 'parse': cmd_parse, 'sort': cmd_sort, 'write': cmd_write, 'export': cmd_export, 'log': cmd_log,
+    {'dashboard': cmd_dashboard, 'check': cmd_check, 'parse': cmd_parse, 'sort': cmd_sort, 'write': cmd_write, 'export': cmd_export, 'log': cmd_log,
      'insights': cmd_insights}[a.cmd](a)
 
 

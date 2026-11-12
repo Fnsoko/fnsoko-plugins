@@ -86,14 +86,24 @@ Always start with **coverage**: "Based on what's logged (about 96% of October)",
 
 ## 4. Dashboard (Claude Artifacts)
 
-When they ask for a dashboard, or at the end of a month review, offer one. Build an interactive Artifact from the insights facts:
-- tiles for money in, money out, savings rate and emergency months
-- spending by category against plan
-- the health-check trend
-- the leak list
-- a what-if slider (amount a month → months to the fund or goal)
+When they ask for a dashboard, or at the end of a month review, offer one. **Use the template, don't design a new one**: `assets/dashboard-template.html` is in the planner's style and its chart colours are already checked for colour-blind readers, in light and dark.
 
-Use their currency. Make it readable on a phone, in light and dark. Use only figures from the facts, labelled with coverage. No names, phone numbers or account numbers. Tell them the dashboard is a snapshot; the planner stays their record.
+1. Get the facts as in section 1 (the `.xlsx`, or `data.json` from the Google Sheets ranges).
+2. Build it: `python3 scripts/fnsoko_tools.py dashboard --data data.json --name "<first name, or leave out>" --out dashboard.html` (or `--planner PLANNER.xlsx`; add `--month 2026-10` for a finished month).
+3. Show `dashboard.html` as an Artifact, exactly as built. Don't edit the HTML or the numbers.
+4. Tell them, in one or two lines, what it shows and the one thing worth a look first.
+
+What it shows:
+- status chips: coverage (VERIFIED / PROVISIONAL / ESTIMATED), Ladder step, day of the month
+- four tiles: money in, money out, share saved, emergency fund in months
+- spending against plan: one bar per category with a plan tick and, mid-month, where it's heading
+- worth a look: bills due before income, pricey loans, fees, small repeat spends, repeating Wants, payday pattern, possible duplicates
+- where your money goes: Needs / Wants / Future for each finished month, with a table view
+- a what-if slider: move X a month → emergency fund, each goal, and loan payoff with interest saved
+
+**Can't run code?** Fill the template by hand: replace the JSON between the `FNSOKO-DATA` markers with `{"name": "", "made": "YYYY-MM-DD", "insights": {...}}`, where `insights` follows the output of the `insights` command. If that isn't possible, use fallback prompt 12 and say the result is a one-off design.
+
+It's a snapshot. Their planner stays their record, and the dashboard never asks for or shows names, phone numbers or account numbers.
 
 ## 5. Rules for this mode
 
