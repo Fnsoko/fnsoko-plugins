@@ -15,7 +15,33 @@ Receipt codes are kept only as a one-way hash to catch duplicate statements.
 import argparse, csv, datetime as dt, hashlib, io, json, os, re, sys
 from collections import defaultdict, OrderedDict
 
-EXPECTED_VERSION = 'FNSOKO-PLANNER-v5'
+# Planner versions this skill can read and write, newest first. Policy: the current version and the
+# one before it. When a new planner version comes out, add it at the front, keep the previous one,
+# and drop the one before that. If the new version moves a cell this script reads or writes
+# (Setup categories, My Rules, Money Log, Month-End accounts, My Emergency Fund H11, My Goals C15:C26),
+# branch on info['version'] where that cell is used. See references/maintenance.md.
+SUPPORTED_VERSIONS = ('FNSOKO-PLANNER-v5',)
+CURRENT_VERSION = SUPPORTED_VERSIONS[0]
+EXPECTED_VERSION = CURRENT_VERSION  # kept for older callers
+
+
+def version_status(ver):
+    """'current', 'previous' (both supported), 'older' (too old to write to) or 'unknown' (newer or not a planner)."""
+    if ver == CURRENT_VERSION:
+        return 'current'
+    if ver in SUPPORTED_VERSIONS:
+        return 'previous'
+    m = re.fullmatch(r'FNSOKO-PLANNER-v(\d+)', str(ver or '').strip())
+    cur = int(re.search(r'(\d+)$', CURRENT_VERSION).group(1))
+    if m and int(m.group(1)) < cur:
+        return 'older'
+    return 'unknown'
+
+
+def require_supported(ver, nothing_written=False):
+    if ver not in SUPPORTED_VERSIONS:
+        tail = ' Nothing was written.' if nothing_written else ''
+        fail('VERSION', f"Planner version {ver} is not one this skill can write to ({', '.join(SUPPORTED_VERSIONS)}).{tail}")
 SPECIALS = ['Transfer between my accounts', 'Cash withdrawal', 'From my emergency fund', 'From my savings', 'Borrowed money']
 GROUP_COLS = OrderedDict([('Income', 'B'), ('Bills', 'C'), ('Everyday', 'D'), ('Savings', 'E'), ('Debt', 'F')])
 
@@ -503,17 +529,25 @@ def planner_info(path):
 
 def cmd_check(a):
     info, _ = planner_info(a.planner)
-    ok = info['version'] == EXPECTED_VERSION
+    status = version_status(info['version'])
+    ok = status in ('current', 'previous')
     all_cats = set(sum(info['categories'].values(), [])) | set(SPECIALS)
     broken = [x for x in info['rules'] if x['category'] not in all_cats]
-    out = {'ok': ok, 'version': info['version'], 'expected': EXPECTED_VERSION, 'year': info['year'], 'currency': info['currency'],
+    out = {'ok': ok, 'version': info['version'], 'version_status': status, 'supported': list(SUPPORTED_VERSIONS),
+           'current': CURRENT_VERSION, 'year': info['year'], 'currency': info['currency'],
            'categories': info['categories'], 'ef_category': info['ef_category'], 'goals': info['goals'],
            'rules': len(info['rules']), 'broken_rules': broken[:10], 'money_log_rows': len(info['existing']),
            'last_date_logged': max([e['date'] for e in info['existing'] if e['date']], default=None),
            'accounts': [x for x in info['accounts'] if x['name']]}
-    if not ok:
-        out['message'] = ('This planner is a different version from the one this skill knows. Stop and tell the person: '
-                          'download the latest Fnsoko Money Planner, or ask Fnsoko for the matching skill.')
+    if status == 'previous':
+        out['message'] = ('This planner is the previous version. Work with it as normal. At the end, mention once that a '
+                          'newer planner is available and offer to help move their numbers across. Never push it.')
+    elif status == 'older':
+        out['message'] = ('This planner is older than this skill can write to. Do not write to it. Keep coaching from what '
+                          'it shows, and offer to walk them through copying their white boxes into the latest planner.')
+    elif not ok:
+        out['message'] = ('This planner is newer than this skill, or not a Fnsoko planner. Do not write to it. Ask them to '
+                          'update the Fnsoko Money Skills plugin (Customize > Plugins > Check for updates), then try again.')
     print(json.dumps(out, indent=1, ensure_ascii=False, default=str))
 
 
@@ -536,8 +570,7 @@ def find_cat(cats, *words):
 def cmd_sort(a):
     parsed = json.load(open(a.parsed))
     info, _ = planner_info(a.planner)
-    if info['version'] != EXPECTED_VERSION:
-        fail('VERSION', f"Planner version {info['version']} does not match {EXPECTED_VERSION}.")
+    require_supported(info['version'])
     cats = info['categories']
     fees_cat = next((c for c in cats.get('Bills', []) + cats.get('Everyday', []) if re.search(r'(bank|m-?pesa).*(fee|charge)|(fee|charge).*(bank|m-?pesa)', c.lower())), None)
     pool = [t for t in parsed['transactions'] if not a.month or t['date'][:7] in a.month]
@@ -817,8 +850,7 @@ def cmd_write(a):
     sorted_ = json.load(open(a.sorted))
     answers = json.load(open(a.answers)) if a.answers else {}
     info, wb = planner_info(a.planner)
-    if info['version'] != EXPECTED_VERSION:
-        fail('VERSION', f"Planner version {info['version']} does not match {EXPECTED_VERSION}. Nothing was written.")
+    require_supported(info['version'], nothing_written=True)
     answers['_cats'], answers['_ef'] = info['categories'], info['ef_category']
     rows, rules = apply_answers(sorted_, answers)
     year = int(info['year']) if info['year'] else None

@@ -10,9 +10,14 @@ You help people **know their numbers** and climb the **Money Ladder**, using the
 ## Before anything else
 
 1. **Find the planner.** If you can open the file, run `python3 scripts/fnsoko_tools.py check PLANNER.xlsx`.
-   - `ok: false` means a different planner version. Stop and say: "Your planner is a different version from the one I know. Please download the latest Fnsoko Money Planner." Never write to it.
    - The check also tells you their year, categories, rules, goals and accounts, so you don't need to ask about them.
-   - **Planner in Google Sheets with the Google Sheets connector?** Read `Workings!C205` yourself: it must say `FNSOKO-PLANNER-v5`, with the same stop rule. Then read Setup and My Rules directly.
+   - **Planner in Google Sheets with the Google Sheets connector?** Read the version in `Workings!C205` yourself and apply the same rules below. Then read Setup and My Rules directly.
+   - **Versions.** You work with the **current and the previous** planner version. The supported list is `SUPPORTED_VERSIONS` in `scripts/fnsoko_tools.py`; today that is `FNSOKO-PLANNER-v5` only.
+     - **Current:** carry on.
+     - **Previous:** carry on as normal. Once, at the end, mention that a newer planner exists and offer to help move their numbers across. Never push it.
+     - **Older:** don't write to it. Keep coaching from what it shows, and offer to walk them through copying their white boxes into the latest planner.
+     - **Newer or unknown:** don't write to it. Ask them to update the plugin (Customize > Plugins > Check for updates), then try again.
+   - **Green boxes hold links.** Many boxes fill themselves from My Money Profile (see `references/tracker-map.md`). Never type over a formula: change the Profile instead.
 2. **No file?** Work from what they tell you or paste, and give paste-ready text. Never assume cell contents.
 3. **Pick the mode** from the table below and read only the reference file it names.
 

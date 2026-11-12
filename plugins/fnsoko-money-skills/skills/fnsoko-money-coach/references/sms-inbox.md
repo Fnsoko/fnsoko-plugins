@@ -43,7 +43,7 @@ Walk them through it one step at a time. Wait for "done" before the next step.
 ## Part 2: Process the inbox
 
 1. **Find the planner** through the Google Sheets connector (or the file, if they gave you one).
-   - Version check: `Workings!C205` must be `FNSOKO-PLANNER-v5`, or stop as in SKILL.md.
+   - Version check: `Workings!C205` must be a supported version (current or previous), as in SKILL.md.
    - Year check: `Setup!C6` must match the year of the messages. The Money Log only counts dates in that year. If it doesn't match, stop and tell them to update Setup (or start the new year's planner).
 2. **Read:**
    - SMS Inbox rows from B7 down where **Logged is empty**

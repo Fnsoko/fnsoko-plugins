@@ -2,9 +2,16 @@
 
 ## Versions
 
-- The planner stores its version in `Workings!C205` (now `FNSOKO-PLANNER-v5`). The script's `EXPECTED_VERSION` must match.
-- **Any change that moves an input cell, renames a tab or changes a special category = a new version.** Bump both the planner cell and `EXPECTED_VERSION`, and update `tracker-map.md`.
-- Older planners: the skill refuses to write and asks the person to get the latest planner. Their data can be copied across by hand (white boxes only).
+- The planner stores its version in `Workings!C205` (now `FNSOKO-PLANNER-v5`). The script lists the versions it supports in `SUPPORTED_VERSIONS`, newest first.
+- **Policy: the skill supports the current and the previous planner version**, so nobody is cut off the day a new planner comes out.
+- **Prefer changes that keep the version.** Linking boxes with formulas, new help text, new dropdowns and extra tabs nothing reads (like SMS Inbox) all stay on the same version.
+- **Any change that moves an input cell, renames a tab or changes a special category = a new version.** When you make one:
+  1. Set the new version in the planner's `Workings!C205`.
+  2. Add it at the front of `SUPPORTED_VERSIONS`, keep the previous version, and drop the one before that.
+  3. Wherever the script reads or writes a cell that moved, branch on `info['version']`.
+  4. Update `tracker-map.md`, noting where the previous version differs.
+  5. Bump the plugin version and release, so marketplace installs update before people get the new planner.
+- Planners older than both supported versions: the skill doesn't write to them. It coaches from what they show and offers to help copy the white boxes into the latest planner.
 
 ## Before you release a change
 

@@ -16,7 +16,7 @@ Unlocked files only. If a statement is password-protected, the person opens it a
 ## Steps
 
 1. **Check the planner**
-   `python3 scripts/fnsoko_tools.py check PLANNER.xlsx`. Stop if the version doesn't match.
+   `python3 scripts/fnsoko_tools.py check PLANNER.xlsx`. If `ok` is false, follow the `message` and the version rules in SKILL.md.
 
 2. **Read the statements**
    `python3 scripts/fnsoko_tools.py parse "My Money/Statements/New" --out /tmp/parsed.json`
