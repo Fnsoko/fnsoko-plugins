@@ -1136,8 +1136,48 @@ def _payoff(loans, extra=0.0, cap=360):
     return None, None
 
 
+def _rate(v):
+    """'7.5%', 7.5 or 0.075 -> 0.075. Sheets reads come back as formatted text."""
+    if v is None or v == '':
+        return 0.0
+    pct = isinstance(v, str) and '%' in v
+    x = to_amount(v) or 0.0
+    return x / 100 if pct or x > 1 else x
+
+
+def _clean_data(data):
+    """Accept Google Sheets' formatted text ('40,699', '7.5%', 'per month', '1') as well as plain numbers."""
+    d = dict(data)
+    num = lambda v: to_amount(v) or 0.0
+    d['loans'] = [dict(l, owe=num(l.get('owe')), payment=num(l.get('payment')), rate=_rate(l.get('rate')),
+                       per='month' if 'month' in str(l.get('per', '')).lower() else 'year')
+                  for l in data.get('loans', []) if num(l.get('owe'))]
+    d['goals'] = [dict(g, target=num(g.get('target')), saved=num(g.get('saved'))) for g in data.get('goals', []) if g.get('name')]
+    ef = dict(data.get('emergency_fund') or {})
+    for k in ('essentials', 'target', 'balance'):
+        if k in ef:
+            ef[k] = num(ef[k])
+    d['emergency_fund'] = ef
+    d['bills_due'] = [dict(b, amount=num(b.get('amount')), day=int(num(b.get('day'))) if num(b.get('day')) else None)
+                      for b in data.get('bills_due', []) if b.get('name') and num(b.get('amount'))]
+    for k in ('month_end_balances', 'not_logged'):
+        d[k] = {str(m): to_amount(v) for m, v in (data.get(k) or {}).items() if to_amount(v) is not None}
+    st = to_amount(data.get('ladder_step'))
+    d['ladder_step'] = int(st) if st else None
+    d['expensive_from'] = _rate(data.get('expensive_from')) or 0.2
+    bud = {}
+    for c, v in (data.get('budget') or {}).items():
+        if isinstance(v, dict):
+            bud[c] = {'usual': num(v.get('usual')), 'months': {str(m): num(x) for m, x in (v.get('months') or {}).items()}}
+        else:
+            bud[c] = num(v)
+    d['budget'] = bud
+    return d
+
+
 def compute_insights(data, month=None, today=None, whatifs=()):
     today = today or dt.date.today()
+    data = _clean_data(data)
     log = []
     for x in data.get('log', []):
         d = to_date(x.get('date'))
@@ -1176,8 +1216,8 @@ def compute_insights(data, month=None, today=None, whatifs=()):
     for x in spend_rows:
         groups[(x['category'], _note_key(x['note'], x['category']))].append(x['amount'])
     small = sorted([{'category': c, 'what': k, 'times': len(v), 'total': _r(sum(v)), 'yearly_at_this_pace': _r(sum(v) * 12)}
-                    for (c, k), v in groups.items()
-                    if len(v) >= SMALL_SPEND_MIN_COUNT and sorted(v)[len(v) // 2] <= SMALL_SPEND_MAX],
+                                    for (c, k), v in groups.items()
+                    if _needwant(c, _kind(c, data), data) == 'Want' and len(v) >= SMALL_SPEND_MIN_COUNT and sorted(v)[len(v) // 2] <= SMALL_SPEND_MAX],
                    key=lambda z: -z['total'])[:5]
     hist = defaultdict(lambda: defaultdict(list))
     for m in prev + [month]:
@@ -1288,7 +1328,8 @@ def compute_insights(data, month=None, today=None, whatifs=()):
             crunch = {'main_income': main['name'], 'arrives_day': main['day'], 'bills_before': before,
                       'due_before_total': _r(sum(b['amount'] for b in before)), 'other_money_in_by_then': _r(early_in)}
     out['cash_crunch'] = {'income_days': arrivals, 'bills_with_due_day': bills, 'crunch': crunch,
-                          'bills_missing_due_day': [b['name'] for b in data.get('bills_due', []) if not b.get('day')]}
+                          'bills_missing_due_day': [b['name'] for b in data.get('bills_due', []) if not b.get('day')
+                                                    and _kind(b['name'], data) == 'Bills' and b['name'] != data.get('fees_category')]}
 
     # 5. payday and weekday patterns (last 3 full months, plus this one if finished)
     pat = []

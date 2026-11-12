@@ -42,6 +42,8 @@ Use it:
  "ladder_step": 2, "expensive_from": 0.2}
 ```
 
+Google Sheets returns formatted text (`"40,699"`, `"7.5%"`, `"1 Aug 2026"`, `"per month"`). Put it in as it comes; the script reads all of these.
+
 The output is JSON facts. **You write the words.** Never show the JSON.
 
 ## 2. The insights, and how to say them
@@ -52,7 +54,7 @@ Always start with **coverage**: "Based on what's logged (about 96% of October)",
 |---|---|---|
 | **Fees** (`leaks.fees`) | Total M-Pesa and bank fees, and their share of spending | "KSh 1,840 went on fees this month. That's about a week of groceries." Then one tip, such as fewer and bigger transfers instead of many small ones, or paying from the wallet that charges less. Point them to Safaricom's or their bank's current tariff; don't quote charges from memory |
 | **Borrowing cost** (`leaks.borrowing`, `leaks.loan_costs`) | How often they borrowed; each loan's monthly rate as a yearly rate | "Fuliza at 7.5% a month is about 90% a year (138% when it compounds)." Use the planner's rates; for Fuliza, ask them to check the current daily fee in the app. Expensive = at or above My Money Ladder G30 |
-| **Small spends that add up** (`leaks.small_repeats`) | The same small payment 4+ times in the month | "Coffee 11 times = KSh 3,700, about KSh 44,000 a year at this pace." **A choice, not a crime.** Ask if it's worth it to them, and never call it waste |
+| **Small spends that add up** (`leaks.small_repeats`) | The same small payment in a **Want** category 4+ times in the month (Needs like matatu fares are never called leaks) | "Coffee 11 times = KSh 3,700, about KSh 44,000 a year at this pace." **A choice, not a crime.** Ask if it's worth it to them, and never call it waste |
 | **Repeating payments** (`leaks.repeating_payments`) | Same payee and amount in 2+ months. Wants are listed first | "Showmax KSh 1,100 every month (KSh 13,200 a year). Still using it?" Needs like rent are fixed costs, not leaks |
 | **Pace** (`pace`) | Mid-month: where each category is heading, based on their usual pattern. Ended month: plan vs actual | "Day 12 of 30 and 71% of your spending plan is gone. At this pace Groceries ends about KSh 3,300 over." Skip it when `too_early` (before day 7). Name `unplanned` categories so they can add them to My Budget |
 | **What-ifs** (`what_ifs`) | Moving X a month from a category to the emergency fund, each goal, or extra loan payments | "Move KSh 2,000 a month from Eating out: emergency fund full in 21 months instead of 35, or the Laptop in 18 instead of 35, or debt-free 2 months sooner with KSh 450 less interest." Offer 2-3 amounts they pick; they choose where it goes. Ask permission before running a what-if on a Need |
