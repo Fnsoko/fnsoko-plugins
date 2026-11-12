@@ -16,7 +16,7 @@ fnsoko-plugins/                       ← marketplace "fnsoko"
 
 | Skill | What it does |
 |---|---|
-| `fnsoko-money-coach` | Reads your M-Pesa or bank statements, builds your money profile, plans and reviews your month, and helps with your emergency fund, debt payoff, goals and retirement. Always ends with your Money Ladder step and your one next move. |
+| `fnsoko-money-coach` | Reads your M-Pesa or bank statements, builds your money profile, plans and reviews your month, and helps with your emergency fund, debt payoff, goals and retirement. Gives you something back too: a weekly check-in, what-ifs, money leaks and your money dashboard (this month, debt-free date, emergency fund, goals, year, net worth and future). Always ends with your Money Ladder step and your one next move. |
 
 New skills get added to Fnsoko Money Skills over time.
 
