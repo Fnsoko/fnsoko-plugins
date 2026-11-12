@@ -64,7 +64,7 @@ Best with the **Google Sheets** connector (to read and write the planner) and th
 | "Help me get started", "I don't know where my money goes" | Money Profile interview (5 rounds) | `references/coaching-modes.md` §1 |
 | "Help me plan next month", "make me a budget" | Plan the month | `references/coaching-modes.md` §2 |
 | "How did my month go?", "review October" | Month-end review, ending with the month letter | `references/coaching-modes.md` §3 and `references/insights.md` |
-| "Where is my money going?", "how am I doing?", "what can I change?", "what if I cut…", "make me a dashboard", a weekly check-in | Insights (dashboard: `assets/dashboard-template.html` via the `dashboard` command) | `references/insights.md` |
+| "Where is my money going?", "how am I doing?", "what can I change?", "what if I cut…", "make me a dashboard", a weekly check-in | Insights (dashboards: `assets/dashboard-template.html` via the `dashboard` command; tabs for this month, debt-free, emergency fund, goals, my year, net worth, my future) | `references/insights.md` |
 | Emergency fund, debt payoff, goals, retirement, "can I afford…" | Protect and grow | `references/coaching-modes.md` §4 and `references/money-math.md` |
 | Fuliza, chama, M-Shwari, Hustler Fund, reversals, diaspora money, business money, cash | Kenyan money cases | `references/kenya-money-cases.md` |
 | "Where do I type…", "what does this tab do" | Planner help | `references/tracker-map.md` |

@@ -22,8 +22,9 @@ Use it:
 - My Budget `B10:O100` (B name, C usual, D..O = Jan..Dec, so D = Jan and N = Nov). Drop the section headings, the Category header rows and the Total rows. Short rows from the connector just mean empty months
 - My Money Profile `B23:E37` income and `B43:D72` must-pay with due day in D (v5: `B23:E28`, `B34:D43`)
 - Workings `C214` essentials, `C215` fund target, `C218` fund balance, `C196` ladder step, `B252:H263` goals (B name, D date, G target, H saved; include only goals with a target)
-- My Loans `C17:I24` (C name, F owe, G rate, H per year/month, I minimum payment)
-- Month-End Check `E16:P23` (balances, Jan..Dec) and `I31:I42` (not logged, Jan..Dec); My Emergency Fund `H11` (fund category); My Money Ladder `G30`
+- My Loans `C17:I24` (C name, F owe, G rate, H per year/month, I minimum payment) and `H9:H11` (plan start, extra a month, method)
+- Month-End Check `E16:P23` (balances, Jan..Dec) and `I31:I42` (not logged, Jan..Dec); My Emergency Fund `H8` (months) and `H11` (fund category); My Money Ladder `G30`
+- For the extra dashboard tabs: Workings `C222:C226` (fund pace), `B251:M263` (goal status: L per month, K months left, M status), `C296:C304` and `O287:O294` (debt plan), `D134:O137` (net worth own / owe / net / month typed) with `B150:C159` (own by type), `C147:C148`; My Future `C6:C13`
 
 **`data.json` shape** (leave out what you don't have; the script skips that part):
 
@@ -39,7 +40,15 @@ Use it:
  "goals": [{"name": "Laptop", "target": 80000, "saved": 10000, "date": "2027-06-30"}],
  "loans": [{"name": "Mobile loans", "owe": 5000, "rate": 0.075, "per": "month", "payment": 1500}],
  "month_end_balances": {"10": 7000}, "not_logged": {"10": 2500},
- "ladder_step": 2, "expensive_from": 0.2}
+ "ladder_step": 2, "expensive_from": 0.2,
+ "loan_plan": {"start": "Nov 2026", "extra": 0, "method": "Avalanche: highest interest first", "debt_free_by": "Feb 2027", "months": 4,
+               "interest_plan": 968, "debt_free_by_min": "Feb 2027", "interest_min": 968, "interest_saved": 0, "months_sooner": 0,
+               "pay_this_month": [{"name": "Mobile loans", "pay": 1500}]},
+ "goal_status": [{"name": "Laptop", "horizon": "Short-term", "per_month": 8000, "months_left": 8, "status": "On track"}],
+ "fund_plan": {"months_target": 6, "months_to_target": 5, "target_date": "Apr 2027", "avg_per_month": 3000},
+ "net_worth": {"own": [12 values Jan..Dec], "owe": [12], "net": [12], "typed": [12], "by_type": [["Cash & M-Pesa", 7000]],
+               "change_since_first": 19000, "first_month_name": "August"},
+ "future": {"age": 30, "stop_age": 60, "income_wanted": 60000, "saved": 0, "monthly": 9250, "return": "10%", "inflation": "5%", "spend_rate": "4%"}}
 ```
 
 Google Sheets returns formatted text (`"40,699"`, `"7.5%"`, `"1 Aug 2026"`, `"per month"`). Put it in as it comes; the script reads all of these.
@@ -93,13 +102,23 @@ When they ask for a dashboard, or at the end of a month review, offer one. **Use
 3. Show `dashboard.html` as an Artifact, exactly as built. Don't edit the HTML or the numbers.
 4. Tell them, in one or two lines, what it shows and the one thing worth a look first.
 
-What it shows:
+It opens on **This month**. Tabs across the top add **Debt-free**, **Emergency fund**, **Goals**, **My year**, **Net worth** and **My future**; link straight to one with `#debt`, `#fund`, `#goals`, `#year`, `#worth` or `#future` at the end of the address, or just tell them which tab to open ("show me my debt-free plan" → the Debt-free tab). A tab with nothing in the planner yet says what to fill in.
+
+What This month shows:
 - status chips: coverage (VERIFIED / PROVISIONAL / ESTIMATED), Ladder step, day of the month
 - four tiles: money in, money out, share saved, emergency fund in months
 - spending against plan: one bar per category with a plan tick and, mid-month, where it's heading
 - worth a look: bills due before income, pricey loans, fees, small repeat spends, repeating Wants, payday pattern, possible duplicates
 - where your money goes: Needs / Wants / Future for each finished month, with a table view
 - a what-if slider: move X a month → emergency fund, each goal, and loan payoff with interest saved
+
+The other tabs:
+- **Debt-free:** total owed, debt-free date, interest still to pay, each loan's true yearly cost, what to pay this month, and an extra-payment slider with Avalanche / Snowball
+- **Emergency fund:** saved vs target with 1-month and full-fund marks, months covered, the date it's full, and its balance month by month
+- **Goals:** a card per goal (progress, on track or not, amount a month, date), plus savings that have no target yet
+- **My year:** money in and out by month, where most of it went, and the share saved each month
+- **Net worth:** the planner's net worth by month, what they own and owe, and what they own by type
+- **My future:** filled from My Future, with boxes they can change to explore (age, income wanted, monthly saving): pot in today's money, what it could pay, and what it takes to hit the target. Always an estimate
 
 **Can't run code?** Fill the template by hand: replace the JSON between the `FNSOKO-DATA` markers with `{"name": "", "made": "YYYY-MM-DD", "insights": {...}}`, where `insights` follows the output of the `insights` command. If that isn't possible, use fallback prompt 12 and say the result is a one-off design.
 
