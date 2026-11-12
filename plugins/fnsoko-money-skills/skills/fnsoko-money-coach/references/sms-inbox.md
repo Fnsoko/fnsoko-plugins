@@ -59,6 +59,7 @@ Walk them through it one step at a time. Wait for "done" before the next step.
    - Special categories, as in `kenya-money-cases.md`:
      - Fuliza draw = **Borrowed money**
      - Fuliza repayment = **Mobile loans**
+     - Fuliza access or daily fee: **don't log it on its own**. It's added to what they owe and paid inside the repayment, so logging it now would count it twice
      - Agent or ATM cash = **Cash withdrawal**
      - Moves between their own wallets and banks = **Transfer between my accounts**. If both sides arrive (bank SMS and M-Pesa SMS for the same amount at about the same time), log it **once**.
      - Chama or MMF money coming back = **From my savings**
@@ -66,7 +67,7 @@ Walk them through it one step at a time. Wait for "done" before the next step.
    - **Transaction cost:** its own row in their fees category (default **Bank & M-Pesa fees**). Several fees in one run may be one row, Note "M-Pesa fees, 3-9 Nov".
    - **Reversal:** cancel it against the original. If the original was never logged, log neither.
    - **Already on the Money Log** (same date, amount and direction, for example from a statement import): don't add it. Logged = `Skipped: already in Money Log`.
-   - **Note:** short and plain ("Supermarket", "Sent to family", "Salary"). **No names, phone numbers, account numbers or M-Pesa codes.**
+   - **Note:** short and plain ("Supermarket", "Sent to family", "Salary"). **Reuse the wording of earlier Money Log notes** for the same kind of payment ("Coffee" every time, not "Café" one day and "Coffee" the next), so repeat spends show up in the insights. **No names, phone numbers, account numbers or M-Pesa codes.**
 6. **Ask** (interactive runs only): at most 3 questions per message, biggest amounts first, with category choices. Offer to save a rule: "Should I always use Rent for this paybill?" On yes, add it to My Rules (B words, C category).
 7. **Write:**
    - With write access: add the rows at the **first empty row of Money Log, columns B to F only** (G fills itself). Then put today's date in **Logged** for every message you turned into rows.
@@ -86,14 +87,20 @@ The automation only feels automatic when you check the inbox for them. At the en
 > "Want me to check your SMS Inbox every evening, or every Sunday, and email you a short summary?"
 
 - **Daily or weekly.** Monthly is too far apart: questions pile up and they forget what payments were.
-- **Create the scheduled task yourself** if your environment can (for example, scheduled tasks in the Claude desktop app). It usually needs a paid Claude plan. Use a prompt like:
-  > Use the Fnsoko Money Coach skill. Process the SMS Inbox of my planner [planner link] as an unattended run, then email me the summary at [their email].
-- **If scheduling isn't available,** give them that prompt to save and run themselves on the same day each week.
+- **Create the scheduled task yourself** if your environment can. Use a prompt like:
+  > Use the Fnsoko Money Coach skill. Process the SMS Inbox of my planner [planner link] as an unattended run, then run the insights and email me the weekly check-in at [their email].
+- **Where it runs depends on where they use Claude.** Tell them which applies:
+  - **Claude app (Cowork) on any paid plan** (Pro, Max, Ultra, Team, Enterprise): scheduled tasks run in the cloud, on time, **even when their computer is asleep or the app is closed**. The run uses their connectors and installed plugins, so they need the Fnsoko plugin installed through the marketplace and the Google Sheets and Gmail connectors on. Keep the task to the planner and Gmail: a task that needs files on their computer only runs locally.
+  - **Claude Code desktop app:** a local scheduled task only runs while the app is open and the computer is awake. A missed run happens once when the computer wakes. To run with the computer off, create a cloud scheduled task instead.
+  - **Free plan:** no scheduled tasks. Give them the prompt to save and agree a weekly "money date" (same day, same time) to run it themselves.
+  - These rules change. If unsure, check Claude's current help page on scheduling recurring tasks in Cowork.
 
 **Unattended runs (no one is there to answer):**
 
 - Never ask questions. Log only messages you are sure of (My Rules match, or clearly one category).
-- Leave unclear ones **unlogged** (Logged empty) and list them in the summary as questions.
+  - List the questions in the summary **biggest amounts first**, as in interactive runs.
+  - Money **in** with more than one possible Income category (Side hustle or Business income?) and no My Rules match is **not** sure. Ask in the summary and offer to save a rule.
+- Leave unclear ones **unlogged** (Logged empty) and list them in the summary as questions. A message left unlogged keeps its transaction cost with it: log both when they answer.
 - Skip non-transactions with a reason, as in Part 2.
 - Don't add My Rules on your own. Suggest them in the summary.
 - **Email the summary** with Gmail, to the person's own address only. Never send to anyone else.

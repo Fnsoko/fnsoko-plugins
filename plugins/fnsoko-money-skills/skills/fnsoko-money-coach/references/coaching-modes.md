@@ -35,7 +35,7 @@ Run these checks as facts arrive: the leak; emergency cover; whether stated inco
 
 ## §3 Month-end review
 
-1. **Does it add up?** Use the planner's Month-End Check. VERIFIED, PROVISIONAL (with the amount not logged and where to look: small M-Pesa payments, fees, cash) or ESTIMATED (no balances). Never call a month verified yourself.
+1. **Does it add up?** Use the planner's Month-End Check. If they imported statements, the balances for those accounts are already there (`statement-import.md` step 6): ask only for cash and accounts without a statement. VERIFIED, PROVISIONAL (with the amount not logged and where to look: small M-Pesa payments, fees, cash) or ESTIMATED (no balances). Never call a month verified yourself.
 2. **Plan vs actual** where both exist. The 3 biggest differences.
 3. **50/30/20** and the **lifestyle check** (this month vs the 3 months before). If Wants grew faster than income, name it as lifestyle creep, kindly.
 4. **Ladder**: the step and one next move.

@@ -71,7 +71,10 @@ Unlocked files only. If a statement is password-protected, the person opens it a
 
 6. **Write**
    - If you can edit the planner file: `python3 scripts/fnsoko_tools.py write /tmp/sorted.json --planner PLANNER.xlsx --answers /tmp/answers.json --out "PLANNER (updated).xlsx"`. Only overwrite the original (`--in-place`) if the person said yes.
-   - Google Sheets, or no file access: `python3 scripts/fnsoko_tools.py export /tmp/sorted.json --answers /tmp/answers.json` gives three paste-ready blocks: Money Log rows (paste at column B of the first empty row), new My Rules rows, and closing balances to type on the Month-End Check.
+   - Google Sheets, or no file access: `python3 scripts/fnsoko_tools.py export /tmp/sorted.json --answers /tmp/answers.json` gives three paste-ready blocks: Money Log rows (paste at column B of the first empty row), new My Rules rows, and balances for the Month-End Check.
+   - **Month-End Check balances come from the statements too.** The script takes each account's balance at the end of every month, plus the balance before the first transaction (written as the month before's closing, or the Start column if the statement begins in January), so the first month can be checked as well.
+     - With the Google Sheets connector, write them yourself: Month-End Check rows 16-23 (B account, C type), D = Start (1 Jan), E..P = Jan..Dec. Match each statement to its account row (add the account in an empty row if it's missing). **Only fill empty cells**; if a typed balance differs from the statement, show both and ask.
+     - Be honest about what this proves. Rows and balances from the same statement agree by design, so a statement-only check confirms the **import is complete**. It doesn't cover cash or accounts without a statement. Ask for those balances (cash in hand, other wallets, a SACCO account used for spending), or the month stays PROVISIONAL.
 
 7. **Tidy up.** Move the imported files to `Statements/Done`. Delete `/tmp` files.
 

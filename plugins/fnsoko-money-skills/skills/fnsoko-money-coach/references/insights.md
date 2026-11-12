@@ -12,16 +12,16 @@ Use it:
 
 | Planner is… | Do this |
 |---|---|
-| A file you can open (.xlsx) | `python3 scripts/fnsoko_tools.py insights --planner PLANNER.xlsx [--month 2026-11] [--whatif "Eating out:2000"]` |
+| A file you can open (.xlsx) | `python3 scripts/fnsoko_tools.py insights --planner PLANNER.xlsx [--month 2026-11] [--whatif "Eating out:2000"] [--today 2026-11-12]` (`--today` defaults to today; set it in scheduled runs so the week and pace are for the run's date) |
 | In Google Sheets (connector) | Read the ranges below, build `data.json` in the shape below, then run `insights --data data.json`. If you can't run code, follow the same steps by hand and label the results ESTIMATED |
 | Not available | Ask them to paste this month's Money Log rows and their budget. Work from that only |
 
 **Ranges to read in Google Sheets** (v6; v5 differences in brackets):
 - Setup `B13:F27` (categories by group: B Income, C Bills, D Everyday, E Savings, F Debt) and `B36:E50` (Need/Want tags)
 - Money Log `B10:E2009` (date, category, amount, note)
-- My Budget `B10:O100` (B name, C usual, D..O = Jan..Dec)
+- My Budget `B10:O100` (B name, C usual, D..O = Jan..Dec, so D = Jan and N = Nov). Drop the section headings, the Category header rows and the Total rows. Short rows from the connector just mean empty months
 - My Money Profile `B23:E37` income and `B43:D72` must-pay with due day in D (v5: `B23:E28`, `B34:D43`)
-- Workings `C214` essentials, `C215` fund target, `C218` fund balance, `C196` ladder step, `B252:H263` goals (B name, D date, G target, H saved)
+- Workings `C214` essentials, `C215` fund target, `C218` fund balance, `C196` ladder step, `B252:H263` goals (B name, D date, G target, H saved; include only goals with a target)
 - My Loans `C17:I24` (C name, F owe, G rate, H per year/month, I minimum payment)
 - Month-End Check `E16:P23` (balances, Jan..Dec) and `I31:I42` (not logged, Jan..Dec); My Emergency Fund `H11` (fund category); My Money Ladder `G30`
 
@@ -65,12 +65,14 @@ Always start with **coverage**: "Based on what's logged (about 96% of October)",
 
 ## 3. Formats
 
+**Before any check-in**, look at `log_checks` and `pace.plan_looks_off`. Mention possible duplicates or a plan far from what they really pay in one line, as "worth a look". Never delete or change their rows. If a plan looks off, say the totals that use it may be off too.
+
 **Weekly check-in** (scheduled email or chat, 6-8 lines):
 1. Coverage and rows added this week.
-2. Money in and out this week, and pace for the month (one line).
+2. Money in and out this week (`week`: the 7 days up to today), and pace for the month (one line).
 3. The one category heading over, or "on track".
 4. One leak or repeating payment worth a look.
-5. Cash crunch warning if a big bill is due in the next 7 days before income.
+5. Cash crunch warning from `cash_crunch.upcoming`: bills not yet paid this month that fall due before the main income arrives.
 6. Ladder step and one next move.
 
 **Month letter** (after the Month-End Check, about 5 lines, warm and plain; built from `letter_facts` plus the rest):

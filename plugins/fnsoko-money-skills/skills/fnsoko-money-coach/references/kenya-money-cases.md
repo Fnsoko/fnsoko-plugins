@@ -6,6 +6,7 @@ These are where beginners' numbers usually go wrong. For each case: how to log i
 |---|---|---|
 | **Fuliza draw** ("OverDraft of Credit Party") | Borrowed money | No |
 | **Fuliza repayment** ("OD Loan Repayment") | Mobile loans (debt) | No |
+| **Fuliza access or daily fee** (in the Fuliza SMS) | Not logged on its own: it's added to the Fuliza balance and paid inside the repayment | No |
 | **A purchase paid with Fuliza** ("Merchant Payment Fuliza M-Pesa", "Customer Transfer Fuliza MPesa") | By who was paid (shop, person). The overdraft line beside it is the Borrowed money | No |
 | **"Salary Payment from …" / "Business Payment from …" on M-Pesa** | M-Pesa's label for payments from banks and companies. Could be salary, own bank money, an investment withdrawal, a loan or a refund | Yes, once per payer |
 | **Money from your own bank "via API"** (Standard Chartered, Absa, NCBA, I&M, Equity) | Transfer between my accounts, and add that bank to the Month-End Check | Once per bank |

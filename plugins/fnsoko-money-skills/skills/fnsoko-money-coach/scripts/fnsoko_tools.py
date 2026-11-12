@@ -793,6 +793,28 @@ def cmd_sort(a):
         if t['balance'] is not None:
             bal[(t['account'], t['account_type'], t['dt'].strftime('%Y-%m'))] = t['balance']
     balances = [{'account': k[0], 'type': k[1], 'month': k[2], 'closing': v} for k, v in sorted(bal.items())]
+    # 9b. the balance before the first transaction = the month before's closing balance, so the first month
+    # can be checked too. Statements list same-minute rows in any order, so take the most common answer.
+    by_acc = defaultdict(list)
+    for t in tx:
+        by_acc[(t['account'], t['account_type'])].append(t)
+    for (acc, typ), lst in by_acc.items():
+        lst.sort(key=lambda x: x['dt'])
+        run, cands = 0.0, []
+        for t in lst[:15]:
+            run += t['in'] - t['out']
+            if t['balance'] is not None:
+                cands.append(round(t['balance'] - run, 2))
+        if not cands:
+            continue
+        opening = max(set(cands), key=cands.count)
+        first = lst[0]['dt']
+        if first.month == 1:
+            key, start = f'{first.year}-01', True
+        else:
+            key, start = f'{first.year}-{first.month - 1:02d}', False
+        if start or (acc, typ, key) not in bal:
+            balances.append({'account': acc, 'type': typ, 'month': key, 'closing': opening, 'opening': True, 'start_of_year': start})
     outside = [r for r in ready if info['year'] and int(r['date'][:4]) != int(info['year'])]
     ready.sort(key=lambda r: (r['date'], r['category']))
     res = {'ok': True, 'planner_year': info['year'], 'months': sorted({t['dt'].strftime('%Y-%m') for t in tx}),
@@ -882,7 +904,7 @@ def cmd_write(a):
         new_rules += 1
     me = wb['Month-End Check']
     amap = answers.get('account_map', {})
-    bal_written, bal_skipped = 0, []
+    bal_written, bal_skipped, bal_conflicts = 0, [], []
     for b in sorted_['balances']:
         y, m = map(int, b['month'].split('-'))
         if year and y != year:
@@ -902,7 +924,12 @@ def cmd_write(a):
             row = free['row']
             me[f'B{row}'], me[f'C{row}'] = target, b['type'] if b['type'] in ('M-Pesa', 'Bank', 'Cash') else 'Other'
             free['name'], free['type'] = target, b['type']
-        col = chr(ord('E') + m - 1)
+        col = 'D' if b.get('start_of_year') else chr(ord('E') + m - 1)
+        if b.get('opening') and me[f'{col}{row}'].value not in (None, ''):
+            typed = to_amount(me[f'{col}{row}'].value)
+            if typed is not None and abs(typed - b['closing']) >= 1:
+                bal_conflicts.append({'account': target, 'cell': f'{col}{row}', 'typed': typed, 'statement': b['closing']})
+            continue  # never overwrite a balance the person typed; show both and ask
         me[f'{col}{row}'] = b['closing']
         bal_written += 1
     out = a.out
@@ -910,7 +937,8 @@ def cmd_write(a):
         fail('OVERWRITE', 'Refusing to overwrite the planner. Pass --in-place if the person agreed.')
     wb.save(out)
     print(json.dumps({'ok': True, 'saved': out, 'rows_written': written, 'rows_outside_year': len(skipped),
-                      'new_rules': new_rules, 'balances_written': bal_written, 'balances_skipped': len(bal_skipped)}))
+                      'new_rules': new_rules, 'balances_written': bal_written, 'balances_skipped': len(bal_skipped),
+                      'balance_conflicts': bal_conflicts}))
 
 
 def cmd_export(a):
@@ -926,9 +954,10 @@ def cmd_export(a):
         for ru in rules:
             print('\t'.join([ru['keyword'], ru['category'], ru['note']]))
     if sorted_['balances']:
-        print('\n=== Month-End Check: type these end-of-month balances ===')
+        print('\n=== Month-End Check: type these balances (column E = Jan ... P = Dec; Start = column D) ===')
         for b in sorted_['balances']:
-            print(f"{b['account']} ({b['type']}), {b['month']}: {b['closing']:,.2f}")
+            when = 'Start (1 Jan)' if b.get('start_of_year') else b['month'] + (' (from the opening balance)' if b.get('opening') else '')
+            print(f"{b['account']} ({b['type']}), {when}: {b['closing']:,.2f}")
 
 
 def cmd_log(a):
@@ -1201,6 +1230,16 @@ def compute_insights(data, month=None, today=None, whatifs=()):
     cur = data.get('currency') or ''
     out = {'ok': True, 'month': month, 'currency': cur, 'in_progress': in_progress, 'day_of_month': day, 'days_in_month': dim,
            'totals': {k: _r(tot[k]) for k in ('in', 'out', 'spending', 'Need', 'Want', 'Future', 'Debt', 'fees')}}
+    wk_start = today - dt.timedelta(days=6)
+    wk = _month_totals([x for x in log if wk_start <= x['date'] <= today], data)
+    seen, dups = defaultdict(int), []
+    for x in log:
+        if (today - x['date']).days <= 35:
+            seen[(x['date'], x['category'], x['amount'])] += 1
+    dups = [{'date': d.isoformat(), 'category': c, 'amount': _r(a), 'times': n} for (d, c, a), n in seen.items() if n > 1]
+    out['log_checks'] = {'possible_duplicates': dups[:5]}
+    out['week'] = {'from': wk_start.isoformat(), 'to': today.isoformat(), 'rows': sum(1 for x in log if wk_start <= x['date'] <= today),
+                   **{k: _r(wk[k]) for k in ('in', 'out', 'spending', 'fees', 'borrowed')}}
 
     # coverage: how much of the month the log explains
     nl = (data.get('not_logged') or {}).get(str(mo))
@@ -1272,8 +1311,18 @@ def compute_insights(data, month=None, today=None, whatifs=()):
                          'over_by': _r(proj - plan) if plan and proj > plan * 1.1 and (not in_progress or day >= 7) else None,
                          'unplanned': not plan and spent > 0})
     plan_total = sum(_budget_for(c, mo, data) for c in allcats)
+    # a plan far from what they really pay (a typo, or a figure that changed) makes every comparison wrong
+    plan_off = []
+    for c in allcats:
+        plan = _budget_for(c, mo, data)
+        got = [sum(x['amount'] for x in by_month[m] if x['category'] == c) for m in prev]
+        got = [g for g in got if g]
+        if plan and len(got) >= 2:
+            avg = sum(got) / len(got)
+            if abs(avg - plan) > 0.5 * max(plan, avg):
+                plan_off.append({'category': c, 'plan': _r(plan), 'usual_logged': _r(avg)})
     out['pace'] = {'share_of_month_gone': _p(day / dim), 'share_of_plan_spent': _p(tot['spending'] / plan_total) if plan_total else None,
-                   'too_early': in_progress and day < 7,
+                   'too_early': in_progress and day < 7, 'plan_looks_off': plan_off,
                    'heading_over': sorted([p for p in pace if p['over_by']], key=lambda z: -z['over_by'])[:5],
                    'unplanned': sorted([p for p in pace if p['unplanned']], key=lambda z: -z['spent'])[:5],
                    'under_plan': sorted([p for p in pace if p['plan'] and p['heading_for'] < p['plan'] * 0.9], key=lambda z: z['heading_for'] - z['plan'])[:3]}
@@ -1313,7 +1362,10 @@ def compute_insights(data, month=None, today=None, whatifs=()):
             if _kind(x['category'], data) == 'Income':
                 pay_days[x['category']].append(x['date'].day)
     arrivals = []
+    recent = months[-4:]
     for c, ds in pay_days.items():
+        if sum(1 for m in recent if any(z['category'] == c for z in by_month[m])) < 2:
+            continue  # one-off money (a gift, a sale) isn't a pay day
         typical = sorted(ds)[len(ds) // 2]
         amount = sum(x['amount'] for m in months[-4:] for x in by_month[m] if x['category'] == c) / max(1, len({m for m in months[-4:] if any(z['category'] == c for z in by_month[m])}))
         arrivals.append({'name': c, 'day': typical, 'amount': _r(amount)})
@@ -1327,7 +1379,15 @@ def compute_insights(data, month=None, today=None, whatifs=()):
         if before:
             crunch = {'main_income': main['name'], 'arrives_day': main['day'], 'bills_before': before,
                       'due_before_total': _r(sum(b['amount'] for b in before)), 'other_money_in_by_then': _r(early_in)}
-    out['cash_crunch'] = {'income_days': arrivals, 'bills_with_due_day': bills, 'crunch': crunch,
+    upcoming = []
+    if in_progress and arrivals:
+        main = max(arrivals, key=lambda z: z['amount'])
+        paid = defaultdict(float)
+        for x in rows:
+            paid[x['category']] += x['amount']
+        upcoming = [dict(b, due_in_days=b['day'] - day) for b in bills
+                    if b['day'] >= day and b['day'] < main['day'] and paid.get(b['name'], 0) < 0.9 * b['amount']]
+    out['cash_crunch'] = {'income_days': arrivals, 'bills_with_due_day': bills, 'crunch': crunch, 'upcoming': upcoming,
                           'bills_missing_due_day': [b['name'] for b in data.get('bills_due', []) if not b.get('day')
                                                     and _kind(b['name'], data) == 'Bills' and b['name'] != data.get('fees_category')]}
 

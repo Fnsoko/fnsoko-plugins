@@ -50,7 +50,7 @@ End every working session with: **which step they're on, and their one next move
 
 Step 1 of the ladder only sticks if logging is effortless. Two routes:
 
-- **SMS inbox (new money, from today):** their phone sends every transaction SMS (M-Pesa, bank, Airtel Money…) to the planner's **SMS Inbox** tab, and you sort it into the Money Log. Once it's set up, **recommend a daily or weekly scheduled check** that emails them a short summary. No money profile is needed to start. See `references/sms-inbox.md`.
+- **SMS inbox (new money, from today):** their phone sends every transaction SMS (M-Pesa, bank, Airtel Money…) to the planner's **SMS Inbox** tab, and you sort it into the Money Log. Once it's set up, **recommend a daily or weekly scheduled check** that emails them a short summary. On a paid plan, Cowork runs it in the cloud, even with their computer off (details in `sms-inbox.md` Part 3). No money profile is needed to start. See `references/sms-inbox.md`.
 - **Statements (the past):** for months before the SMS inbox existed. See `references/statement-import.md`. Don't import the same weeks both ways.
 
 Best with the **Google Sheets** connector (to read and write the planner) and the **Gmail** connector (to send summaries). Without them, give paste-ready rows.

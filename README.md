@@ -69,7 +69,7 @@ Any tool that supports Agent Skills can use the `plugins/fnsoko-money-skills/ski
 
 ## Automate your money messages (optional)
 
-Your phone can send every transaction SMS (M-Pesa, your bank, Airtel Money…) straight into your planner. Claude then sorts them into your Money Log on a daily or weekly schedule and sends you a short summary.
+Your phone can send every transaction SMS (M-Pesa, your bank, Airtel Money…) straight into your planner. Claude then sorts them into your Money Log on a daily or weekly schedule and sends you a short check-in. On a paid Claude plan, scheduled tasks in the Claude app (Cowork) run in the cloud, so the check-in arrives even when your computer is off.
 
 1. Copy the **[SMS-ready Fnsoko Money Planner](https://docs.google.com/spreadsheets/d/1Fb0n-PXVEvoOjDiSHcSHXy6FjuaA6O8pRQlEPu_XDU8/copy)**. It includes the SMS Inbox tab and its script.
 2. In your copy: **Extensions → Apps Script → Deploy → New deployment → Web app** (Execute as Me, Who has access Anyone). Copy the link ending in `/exec`, and keep it private.
