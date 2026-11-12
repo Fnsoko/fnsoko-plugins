@@ -12,14 +12,14 @@
 <style>
 /* Layout: summary first (status chips, 4 tiles), then spending vs plan, where it goes, worth a look, what-if.
    Brand = the planner: Alegreya Sans, dark-teal ink, Pacific-blue headers, lime strip.
-   Chart colours validated (dataviz validator, light on #FFFFFF and dark on #0E2228):
-   Needs coral / Wants lime / Future teal / Debt purple, and a 5-slot order for "what you own"
-   (teal, gold, purple, coral, lime). Lime and gold sit under 3:1 on white, so they always carry visible labels. */
+   Calm on purpose: teal, lime, one pale sky blue (Needs) and slate grey (Debt). Checked with the dataviz validator
+   (colour-blind and normal-vision separation pass, light and dark). Sky and lime sit under 3:1 on white, so they
+   always carry visible labels (legend with amounts, table view). */
 :root {
   --ink: #1B434D; --ink-2: #4E666B; --ink-3: #6E8386;
   --bg: #FFFFFF; --panel: #F6FAFA; --rule: #D3DFE1; --head: #00A1AE; --on-head: #FFFFFF; --lime: #AED12F;
   --bar: #00A1AE; --track: #E6EEEF; --plan: #1B434D;
-  --needs: #E15D7A; --wants: #A3C232; --future: #00A1AE; --debt: #8E5BB5; --gold: #E5A800;
+  --needs: #8EC5E8; --wants: #A3C232; --future: #00A1AE; --debt: #4E666B;
   --good: #0ca30c; --warn: #fab219; --bad: #d03b3b;
   --font: "Alegreya Sans", "Gill Sans", "Trebuchet MS", system-ui, sans-serif;
   --gap: 16px;
@@ -27,11 +27,11 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --ink: #DCEEF0; --ink-2: #A9C0C4; --ink-3: #8AA3A7; --bg: #0E2228; --panel: #132C33; --rule: #284950;
   --head: #0C949F; --on-head: #FFFFFF; --lime: #B9DB45; --bar: #18AAB6; --track: #1D3B42; --plan: #DCEEF0;
-  --needs: #DE6680; --wants: #83A01F; --future: #0C949F; --debt: #A070E0; --gold: #BF8A14; color-scheme: dark } }
+  --needs: #8EC5E8; --wants: #83A01F; --future: #0C949F; --debt: #3F565B; color-scheme: dark } }
 :root[data-theme="dark"] {
   --ink: #DCEEF0; --ink-2: #A9C0C4; --ink-3: #8AA3A7; --bg: #0E2228; --panel: #132C33; --rule: #284950;
   --head: #0C949F; --on-head: #FFFFFF; --lime: #B9DB45; --bar: #18AAB6; --track: #1D3B42; --plan: #DCEEF0;
-  --needs: #DE6680; --wants: #83A01F; --future: #0C949F; --debt: #A070E0; --gold: #BF8A14; color-scheme: dark }
+  --needs: #8EC5E8; --wants: #83A01F; --future: #0C949F; --debt: #3F565B; color-scheme: dark }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.35; margin: 0; }
@@ -40,17 +40,16 @@ body { background: var(--bg); color: var(--ink); font-family: var(--font); font-
   display: flex; flex-direction: column; gap: var(--gap); }
 .brand { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--head); }
 h1 { margin: 2px 0 0; font-size: clamp(26px, 4vw, 36px); font-weight: 800; line-height: 1.05; text-wrap: balance; }
-.strip { height: 6px; background: linear-gradient(90deg, var(--future) 0 33%, var(--lime) 33% 66%, var(--needs) 66%); margin-top: 10px; border-radius: 3px; }
+.strip { height: 6px; background: var(--lime); margin-top: 10px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1.5px solid var(--rule); border-radius: 999px; font-size: 14px; font-weight: 700; }
 .chip i { font-style: normal; width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .chip small { font-weight: 400; color: var(--ink-2); }
 
 .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); }
-.tile { --acc: var(--future); background: color-mix(in srgb, var(--acc) 9%, var(--bg)); border-top: 5px solid var(--acc); border-radius: 0 0 8px 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.tile:nth-child(4n+2) { --acc: var(--needs); } .tile:nth-child(4n+3) { --acc: var(--wants); } .tile:nth-child(4n+4) { --acc: var(--debt); }
-.tile .k { font-size: 14px; font-weight: 700; color: var(--ink-2); display: flex; align-items: center; gap: 8px; }
-.tile .k .em { font-size: 18px; width: 30px; height: 30px; flex: none; display: inline-grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--acc) 22%, var(--bg)); }
+.tile { background: var(--panel); border-top: 4px solid var(--head); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile .k { font-size: 14px; font-weight: 700; color: var(--ink-2); }
+.tile .k .em { margin-right: 6px; }
 .tile .v { font-size: clamp(24px, 3.2vw, 32px); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
 .tile .s { font-size: 13.5px; color: var(--ink-2); }
 
@@ -93,10 +92,8 @@ td { border-bottom: 1px solid var(--rule); padding: 4px 6px; }
 .looks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .looks li { display: grid; grid-template-columns: 1.4em minmax(0, 1fr); gap: 8px; padding: 8px 0; border-top: 1px solid var(--rule); }
 .looks li:first-child { border-top: 0; padding-top: 0; }
-.looks li { grid-template-columns: 34px minmax(0, 1fr); align-items: start; }
-.looks .ic { font-size: 18px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--gold) 18%, var(--bg)); }
-.looks li:nth-child(3n+2) .ic { background: color-mix(in srgb, var(--needs) 16%, var(--bg)); }
-.looks li:nth-child(3n+3) .ic { background: color-mix(in srgb, var(--future) 16%, var(--bg)); }
+.looks li { grid-template-columns: 10px minmax(0, 1fr); }
+.looks .ic { width: 8px; height: 8px; border-radius: 50%; background: var(--head); margin-top: 7px; }
 /* donut + legend */
 .donutwrap { display: grid; grid-template-columns: minmax(150px, 200px) minmax(0, 1fr); gap: 16px; align-items: center; }
 .donut { width: 100%; height: auto; display: block; }
@@ -123,7 +120,6 @@ input[type=range]:focus-visible { outline: 2px solid var(--head); outline-offset
 footer { font-size: 13px; color: var(--ink-3); font-style: italic; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; border-top: 1.5px solid var(--rule); padding-top: 10px; }
 /* tabs */
 .tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 2px solid var(--head); scrollbar-width: thin; }
-.tabs a, .card > h2, .goal h3 { word-spacing: 1.5px; }
 .tabs a { flex: none; padding: 8px 12px; font-weight: 700; font-size: 15px; color: var(--ink-2); text-decoration: none; border: 1.5px solid transparent; border-bottom: 0; }
 .tabs a[aria-current="page"] { background: var(--head); color: var(--on-head); }
 .tabs a:hover { color: var(--ink); } .tabs a[aria-current="page"]:hover { color: var(--on-head); }
@@ -181,17 +177,17 @@ svg text { fill: var(--ink-2); font-family: var(--font); font-size: 12px; }
     <div class="chips" id="chips"></div>
   </header>
   <nav class="tabs" id="tabs" aria-label="Dashboards">
-    <a href="#money">📅 This month</a><a href="#debt">⛓️ Debt-free</a><a href="#fund">🛟 Emergency fund</a><a href="#goals">🎯 Goals</a><a href="#year">📆 My year</a><a href="#worth">🏡 Net worth</a><a href="#future">🌅 My future</a>
+    <a href="#money">This month</a><a href="#debt">Debt-free</a><a href="#fund">Emergency fund</a><a href="#goals">Goals</a><a href="#year">My year</a><a href="#worth">Net worth</a><a href="#future">My future</a>
   </nav>
   <div class="view" id="view-money">
   <section class="tiles" id="tiles" aria-label="This month in numbers"></section>
   <section class="grid2">
-    <div class="card"><h2>📊 Spending against your plan <small id="paceSmall"></small></h2><div class="body" id="spend"></div></div>
-    <div class="card"><h2>👀 Worth a look</h2><div class="body"><ul class="looks" id="looks"></ul></div></div>
+    <div class="card"><h2>Spending against your plan <small id="paceSmall"></small></h2><div class="body" id="spend"></div></div>
+    <div class="card"><h2>Worth a look</h2><div class="body"><ul class="looks" id="looks"></ul></div></div>
   </section>
   <section class="grid2">
-    <div class="card"><h2>🍩 Where your money goes</h2><div class="body" id="split"></div></div>
-    <div class="card whatif"><h2>🔀 What if I moved some money?</h2><div class="body" id="whatif"></div></div>
+    <div class="card"><h2>Where your money goes</h2><div class="body" id="split"></div></div>
+    <div class="card whatif"><h2>What if I moved some money?</h2><div class="body" id="whatif"></div></div>
   </section>
   </div>
   <div class="view" id="view-debt" hidden></div>
@@ -283,7 +279,7 @@ svg text { fill: var(--ink-2); font-family: var(--font); font-size: 12px; }
   sp += '<div class="rows">' + all.map(function (r) {
     var over = r.over_by != null;
     var w = (r.spent / maxv) * 100, a = ((r.heading_for || r.spent) / maxv) * 100, t = r.plan ? (r.plan / maxv) * 100 : null;
-    var col = over ? 'var(--needs)' : 'var(--bar)';
+    var col = 'var(--bar)';
     var tipTxt = r.category + ': spent ' + money(r.spent) + (r.plan ? ' of ' + money(r.plan) + ' planned' : ', no plan') +
       (D.in_progress && r.heading_for > r.spent ? '. Heading for about ' + money(r.heading_for) : '') + (over ? '. About ' + money(r.over_by) + ' over.' : '.');
     return '<div class="row"><span class="name" title="' + esc(r.category) + '">' + esc(r.category) + '</span>' +
@@ -294,7 +290,7 @@ svg text { fill: var(--ink-2); font-family: var(--font); font-size: 12px; }
   }).join('') + '</div>';
   sp += '<div class="legend"><span><i class="sw" style="background:var(--bar)"></i>Spent</span>' +
     (D.in_progress ? '<span><i class="sw" style="background:var(--bar);opacity:.35"></i>Heading for, at your usual pace</span>' : '') +
-    '<span><i class="sw" style="background:var(--plan);width:3px"></i>Plan</span><span><i class="sw" style="background:var(--needs)"></i><span class="flag">▲ over plan</span></span></div>';
+    '<span><i class="sw" style="background:var(--plan);width:3px"></i>Plan</span><span class="flag">▲ over plan</span></div>';
   if ((P.plan_looks_off || []).length) sp += '<p class="note">Your plan for ' + P.plan_looks_off.map(function (x) { return esc(x.category); }).join(', ') + ' is far from what you usually pay, so those bars may mislead. Update My Budget.</p>';
   document.getElementById('spend').innerHTML = all.length ? sp : '<p class="note">No spending logged yet this month.</p>';
 
@@ -312,17 +308,17 @@ svg text { fill: var(--ink-2); font-family: var(--font); font-size: 12px; }
   if (pat.average_share_after_payday != null) items.push(['📅',pct(pat.average_share_after_payday) + ' of spending happens in the ' + pat.payday_window_days + ' days after payday', 'Paying yourself first, on payday, protects your savings.']);
   ((D.log_checks || {}).possible_duplicates || []).slice(0, 1).forEach(function (x) { items.push(['🔍','Possible duplicate: ' + x.category + ' ' + money(x.amount) + ' on ' + x.date, 'Logged ' + x.times + ' times. Check your Money Log; delete one only if it really is a repeat.']); });
   document.getElementById('looks').innerHTML = items.length ? items.slice(0, 6).map(function (i) {
-    return '<li><span class="ic" aria-hidden="true">' + i[0] + '</span><div><b>' + esc(i[1]) + '</b><p>' + esc(i[2]) + '</p></div></li>';
-  }).join('') : '<li><span class="ic">🎉</span><div><b>Nothing stands out</b><p>No fees, pricey loans or repeat spends worth flagging this month.</p></div></li>';
+    return '<li><span class="ic" aria-hidden="true"></span><div><b>' + esc(i[1]) + '</b><p>' + esc(i[2]) + '</p></div></li>';
+  }).join('') : '<li><span class="ic"></span><div><b>Nothing stands out</b><p>No fees, pricey loans or repeat spends worth flagging this month.</p></div></li>';
 
   // where your money goes
   var months = (H.months || []).filter(function (m) { return m.needs != null; });
   var sh = '';
   var nwf = [
-    { label: 'Needs', value: T.Need || 0, color: 'var(--needs)', note: 'rent, food, bills' },
-    { label: 'Wants', value: T.Want || 0, color: 'var(--wants)', note: 'nice to have' },
-    { label: 'Future', value: T.Future || 0, color: 'var(--future)', note: 'savings, goals' },
-    { label: 'Debt', value: T.Debt || 0, color: 'var(--debt)', note: 'loan payments' }
+    { label: 'Needs', value: T.Need || 0, color: 'var(--needs)' },
+    { label: 'Wants', value: T.Want || 0, color: 'var(--wants)' },
+    { label: 'Future', value: T.Future || 0, color: 'var(--future)' },
+    { label: 'Debt', value: T.Debt || 0, color: 'var(--debt)' }
   ];
   var nwfTot = nwf.reduce(function (a, s) { return a + s.value; }, 0);
   if (nwfTot > 0) {
@@ -435,9 +431,9 @@ svg text { fill: var(--ink-2); font-family: var(--font); font-size: 12px; }
       '<input id="dx" type="range" min="0" max="' + Math.max(5000, Math.ceil(total / 2 / 500) * 500) + '" step="500" value="' + (d.extra || 1000) + '">' +
       '<div class="seg" role="group" aria-label="Which loan first"><button type="button" data-o="aval" aria-pressed="' + (/snow/i.test(d.method) ? 'false' : 'true') + '">Avalanche: least interest</button><button type="button" data-o="snow" aria-pressed="' + (/snow/i.test(d.method) ? 'true' : 'false') + '">Snowball: quick wins</button></div>' +
       '<table><thead><tr><th></th><th>Debt-free in</th><th>Interest</th></tr></thead><tbody id="dxr"></tbody></table><p class="note">Minimums of ' + money(mins) + ' a month on every loan, then the extra goes to one loan at a time.</p>';
-    el.innerHTML = h + '<section class="grid2">' + card('⛓️ What you owe', 'highest cost first', hbars(d.loans.slice().sort(function (a, b) { return b.owe - a.owe; }).map(function (l) { return [l.name, l.owe, l.name + ': ' + money(l.owe) + ' at about ' + Math.round(l.yearly_simple * 100) + '% a year']; }), 'var(--debt)') + table) +
-      card('🗓️ This month', '', payBody) + '</section><section class="grid2b">' + card('🚀 What if I paid a bit extra?', '', wi, 'whatif') +
-      card('💡 Why the order matters', '', '<p style="margin:0">Pay the minimum on every loan so none falls behind. Then put every extra shilling on one loan.</p><p style="margin:0"><b>Avalanche</b> clears the highest rate first and costs the least. <b>Snowball</b> clears the smallest balance first, and a quick win can keep you going. Both work: pick the one you’ll stick to.</p><p class="note">Struggling to pay? Talk to your lender before you miss a payment.</p>') + '</section>';
+    el.innerHTML = h + '<section class="grid2">' + card('What you owe', 'highest cost first', hbars(d.loans.slice().sort(function (a, b) { return b.owe - a.owe; }).map(function (l) { return [l.name, l.owe, l.name + ': ' + money(l.owe) + ' at about ' + Math.round(l.yearly_simple * 100) + '% a year']; }), 'var(--bar)') + table) +
+      card('This month', '', payBody) + '</section><section class="grid2b">' + card('What if I paid a bit extra?', '', wi, 'whatif') +
+      card('Why the order matters', '', '<p style="margin:0">Pay the minimum on every loan so none falls behind. Then put every extra shilling on one loan.</p><p style="margin:0"><b>Avalanche</b> clears the highest rate first and costs the least. <b>Snowball</b> clears the smallest balance first, and a quick win can keep you going. Both work: pick the one you’ll stick to.</p><p class="note">Struggling to pay? Talk to your lender before you miss a payment.</p>') + '</section>';
     var order = /snow/i.test(d.method) ? 'snow' : 'aval';
     function draw() {
       var x = +document.getElementById('dx').value, a = sim(0, order), b = sim(x, order);
@@ -461,8 +457,6 @@ svg text { fill: var(--ink-2); font-family: var(--font); font-size: 12px; }
       ['Target', money(f.target), mt + ' months × ' + money(f.essentials), '🎯'],
       ['Full by', f.target_date || '–', f.avg_per_month ? 'saving about ' + money(f.avg_per_month) + ' a month' : 'add a monthly amount', '🏁']
     ]);
-    var fundRing = '<div class="donutwrap">' + ring(share, 'var(--future)', pct(share), 'of target', money(f.balance) + ' of ' + money(f.target)) +
-      '<ul class="dleg"><li><i style="background:var(--future)"></i><span>Saved</span><b>' + money(f.balance) + '</b></li><li><i style="background:var(--track)"></i><span>Still to save</span><b>' + money(Math.max(0, f.target - f.balance)) + '</b></li></ul></div>';
     var marks = [1, 3, mt].filter(function (v, i, a) { return a.indexOf(v) === i && v <= mt; });
     var prog = '<div class="prog" data-tip="' + esc(money(f.balance) + ' of ' + money(f.target)) + '"><span style="width:' + (share * 100) + '%"></span>' +
       marks.map(function (m) { return '<i class="mark" style="left:calc(' + (m / mt * 100) + '% - 1px)"></i>'; }).join('') + '</div>' +
@@ -473,8 +467,8 @@ svg text { fill: var(--ink-2); font-family: var(--font); font-size: 12px; }
       return '<div class="colgrp"><span style="height:' + (x.balance / mx * 100) + '%;background:var(--future);width:min(46px,70%)" data-tip="' + esc(short(x.month) + ': ' + money(x.balance) + (x.moved ? ' (' + (x.moved > 0 ? '+' : '') + money(x.moved) + ' that month)' : '')) + '"></span></div>';
     }).join('') + '<div class="tline" style="bottom:' + (f.target / mx * 100) + '%"><span>Target ' + money(f.target) + '</span></div></div><div class="collabels">' + s.map(function (x) { return '<span>' + short(x.month) + '</span>'; }).join('') + '</div></div>' +
       '<p class="note">Balance at the end of each month, from your Money Log. It started at ' + money(f.starting_balance) + ' before these months.</p>' : '<p class="note">Log a deposit under your emergency fund category to see it grow.</p>';
-    el.innerHTML = h + '<section class="grid2b">' + card('🛟 Progress', pct(share) + ' there', fundRing + prog) + card('📈 How it has grown', '', chart) + '</section>' +
-      card('💡 Keep it working', '', '<p style="margin:0">Keep it somewhere safe and quick to reach, and only for real emergencies: job loss, illness, urgent repairs. School fees or a holiday are goals, not emergencies.</p><p class="note">Used some? Log it as “From my emergency fund” so your totals stay true.</p>');
+    el.innerHTML = h + '<section class="grid2b">' + card('Progress', pct(share) + ' there', prog) + card('How it has grown', '', chart) + '</section>' +
+      card('Keep it working', '', '<p style="margin:0">Keep it somewhere safe and quick to reach, and only for real emergencies: job loss, illness, urgent repairs. School fees or a holiday are goals, not emergencies.</p><p class="note">Used some? Log it as “From my emergency fund” so your totals stay true.</p>');
   })();
 
   // ---------- Goals ----------
@@ -486,18 +480,17 @@ svg text { fill: var(--ink-2); font-family: var(--font); font-size: 12px; }
     var need = real.reduce(function (a, x) { return a + (x.per_month || 0); }, 0);
     var on = real.filter(function (x) { return /track|reach/i.test(x.status || ''); }).length;
     var h = tileRow([['Saved for goals', money(saved), 'of ' + money(aim), '💰'], ['Goals on track', on + ' of ' + real.length, 'Ladder step 6', '✅'], ['Needed each month', money(need), 'to hit every date', '📆'], ['Still to go', money(Math.max(0, aim - saved)), 'across all goals', '🏃']]);
-    var GC = ['var(--future)', 'var(--needs)', 'var(--debt)', 'var(--gold)', 'var(--wants)'];
     function goalEmoji(n) { n = String(n || '').toLowerCase();
       return /car|vehicle|motor/.test(n) ? '🚗' : /house|home|land|plot|rent|deposit/.test(n) ? '🏠' : /school|fee|educat|college|uni/.test(n) ? '🎓' : /travel|holiday|trip|vacation/.test(n) ? '✈️' : /wedding|ruracio|dowry/.test(n) ? '💍' : /business|shop|stock/.test(n) ? '🏪' : /phone|laptop|computer/.test(n) ? '💻' : /baby|child|kid/.test(n) ? '👶' : /christmas|gift|december/.test(n) ? '🎁' : /health|medical|hospital/.test(n) ? '🩺' : '🎯'; }
     var cards = '<section class="goals">' + real.map(function (x, gi) {
       var sh = Math.min(1, (x.saved || 0) / x.target), st = (x.status || '').replace(/^[^A-Za-z]+/, '');
       var good = /track|reach/i.test(x.status || ''), col = good ? 'var(--good)' : 'var(--warn)';
       return '<article class="goal"><h3><span>' + goalEmoji(x.name) + ' ' + esc(x.name) + '</span></h3>' +
-        '<div class="top">' + ring(sh, GC[gi % GC.length], pct(sh), 'saved', money(x.saved) + ' of ' + money(x.target)) +
+        '<div class="top">' + ring(sh, 'var(--future)', pct(sh), 'saved', money(x.saved) + ' of ' + money(x.target)) +
         '<dl><dt>Saved</dt><dd>' + money(x.saved) + '</dd><dt>Target</dt><dd>' + money(x.target) + '</dd><dt>By</dt><dd>' + esc(x.date || '–') + '</dd><dt>A month</dt><dd>' + (x.per_month ? money(x.per_month) : '–') + '</dd></dl></div>' +
         (st ? '<span class="status"><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + col + ';margin-right:6px"></i>' + (good ? '✓ ' : '! ') + esc(st) + '</span>' : '') + '</article>';
     }).join('') + '</section>';
-    var other = noTarget.length ? card('🐷 Savings without a target', 'add one to track it', '<p style="margin:0">' + noTarget.map(function (x) { return esc(x.name); }).join(', ') + '.</p><p class="note">Give any of these a target and a date on My Money Profile to see if you’re on track.</p>') : '';
+    var other = noTarget.length ? card('Savings without a target', 'add one to track it', '<p style="margin:0">' + noTarget.map(function (x) { return esc(x.name); }).join(', ') + '.</p><p class="note">Give any of these a target and a date on My Money Profile to see if you’re on track.</p>') : '';
     el.innerHTML = h + cards + other;
   })();
 
@@ -515,15 +508,8 @@ svg text { fill: var(--ink-2); font-family: var(--font); font-size: 12px; }
       '<div class="legend"><span><i class="sw" style="background:var(--future)"></i>Money in</span><span><i class="sw" style="background:var(--needs)"></i>Money out</span><span>* month in progress</span></div>' +
       '<details><summary>Show as a table</summary><table><thead><tr><th>Month</th><th>In</th><th>Out</th><th>Saved</th><th>Saved %</th></tr></thead><tbody>' + y.months.map(function (m) { return '<tr><td>' + short(m.month) + '</td><td>' + money(m['in']) + '</td><td>' + money(m.out) + '</td><td>' + money(m.saved) + '</td><td>' + pct(m.savings_rate) + '</td></tr>'; }).join('') + '</tbody></table></details>';
     var rate = '<div class="rows">' + full.map(function (m) { return '<div class="row"><span class="name">' + short(m.month) + '</span><div class="track" data-tip="' + esc(short(m.month) + ': saved ' + pct(m.savings_rate) + ' of income') + '"><span class="fill" style="width:' + Math.min(100, (m.savings_rate || 0) / 0.4 * 100) + '%;background:var(--future)"></span><span class="tick" style="left:calc(50% - 1px)"></span></div><span class="num">' + pct(m.savings_rate) + '</span></div>'; }).join('') + '</div><p class="note">The tick is the 20% guide. Full months only.</p>';
-    var topCats = y.top_spending.slice(0, 5), restCats = y.top_spending.slice(5).reduce(function (a, c) { return a + c.total; }, 0);
-    var CC = ['var(--future)', 'var(--gold)', 'var(--debt)', 'var(--needs)', 'var(--wants)'];
-    var catSegs = topCats.map(function (c, i) { return { label: c.category, value: c.total, color: CC[i] }; });
-    if (restCats > 0) catSegs.push({ label: 'Everything else', value: restCats, color: 'var(--ink-3)' });
-    var catTot = catSegs.reduce(function (a, s) { return a + s.value; }, 0);
-    catSegs.forEach(function (s) { s.tip = s.label + ': ' + money(s.value) + ' (' + pct(s.value / (catTot || 1)) + ')'; });
-    var catBody = catSegs.length ? '<div class="donutwrap">' + donut(catSegs, money(catTot).replace(/^\S+ /, ''), 'spent', 'Spending by category this year') + dlegend(catSegs, catTot) + '</div>' : '<p class="note">Log some spending to see this.</p>';
-    el.innerHTML = h + '<section class="grid2">' + card('📊 Money in and out', 'by month', chart) + card('🍩 Where most of it went', 'this year', catBody) + '</section>' +
-      card('🌱 Share of income saved', 'by month', full.length ? rate : '<p class="note">Fills in once a month is finished.</p>');
+    el.innerHTML = h + '<section class="grid2">' + card('Money in and out', 'by month', chart) + card('Where most of it went', 'this year', hbars(y.top_spending.map(function (c) { return [c.category, c.total]; }))) + '</section>' +
+      card('Share of income saved', 'by month', full.length ? rate : '<p class="note">Fills in once a month is finished.</p>');
   })();
 
   // ---------- Net worth ----------
@@ -543,16 +529,9 @@ svg text { fill: var(--ink-2); font-family: var(--font); font-size: 12px; }
       '<path d="M' + n.months.map(function (m, i) { return X(i) + ' ' + Y(m.net); }).join(' L') + ' L' + X(n.months.length - 1) + ' ' + Y(lo) + ' L' + X(0) + ' ' + Y(lo) + 'Z" fill="var(--future)" opacity=".14"/>' +
       '<polyline points="' + n.months.map(function (m, i) { return X(i) + ',' + Y(m.net); }).join(' ') + '" fill="none" stroke="var(--future)" stroke-width="2.5"/>' +
       n.months.map(function (m, i) { return '<circle cx="' + X(i) + '" cy="' + Y(m.net) + '" r="5" fill="var(--future)" stroke="var(--bg)" stroke-width="2" data-tip="' + esc(m.month + ': ' + money(m.net) + ' (own ' + money(m.own) + ', owe ' + money(m.owe) + ')') + '"/><text x="' + X(i) + '" y="' + (Hh - 6) + '" text-anchor="middle">' + m.month + '</text>'; }).join('') + '</svg>';
-    var OC = ['var(--future)', 'var(--gold)', 'var(--debt)', 'var(--needs)', 'var(--wants)'];
     var tsorted = (n.by_type || []).filter(function (t) { return t.value > 0; }).sort(function (a, b) { return b.value - a.value; });
-    var ownSegs = tsorted.slice(0, 5).map(function (t, i) { return { label: t.type, value: t.value, color: OC[i] }; });
-    var ownRest = tsorted.slice(5).reduce(function (a, t) { return a + t.value; }, 0);
-    if (ownRest > 0) ownSegs.push({ label: 'Everything else', value: ownRest, color: 'var(--ink-3)' });
-    var ownTot = ownSegs.reduce(function (a, s) { return a + s.value; }, 0);
-    ownSegs.forEach(function (s) { s.tip = s.label + ': ' + money(s.value) + ' (' + pct(s.value / (ownTot || 1)) + ')'; });
-    var ownBody = ownSegs.length ? '<div class="donutwrap">' + donut(ownSegs, short_(ownTot), 'you own', 'What you own by type') + dlegend(ownSegs, ownTot) + '</div>' : '<p class="note">Type what you own on My Net Worth.</p>';
-    el.innerHTML = h + '<section class="grid2">' + card('📈 Net worth', 'by month', svg + '<p class="note">From My Net Worth. A big jump usually means a new asset was typed in, not that it grew overnight.</p>') +
-      card('💎 What you own', 'latest month', ownBody) + '</section>';
+    el.innerHTML = h + '<section class="grid2">' + card('Net worth', 'by month', svg + '<p class="note">From My Net Worth. A big jump usually means a new asset was typed in, not that it grew overnight.</p>') +
+      card('What you own', 'latest month', tsorted.length ? hbars(tsorted.map(function (t) { return [t.type, t.value]; })) : '<p class="note">Type what you own on My Net Worth.</p>') + '</section>';
   })();
 
   // ---------- My future ----------
@@ -563,7 +542,7 @@ svg text { fill: var(--ink-2); font-family: var(--font); font-size: 12px; }
     var form = '<div class="fields">' + [['fa', 'My age now', v.age], ['fs', 'Age I want to stop working', v.stop], ['fw', 'Monthly income I’d want (today’s money)', v.want], ['fp', 'Saved for this today', v.saved], ['fm', 'I add every month', v.monthly]].map(function (x) {
       return '<label for="' + x[0] + '">' + esc(x[1]) + '<input id="' + x[0] + '" type="number" inputmode="numeric" min="0" step="1" value="' + (x[2] == null ? '' : Math.round(x[2])) + '"></label>';
     }).join('') + '</div><p class="note">Filled from My Future. Change them here to explore; your planner doesn’t change. Assumes ' + pct(ret) + ' a year returns, ' + pct(inf) + ' inflation and spending ' + pct(spend) + ' of the pot a year. An estimate, not a promise.</p>';
-    el.innerHTML = '<section class="tiles" id="ft"></section><section class="grid2b">' + card('🙋 About me', 'type to explore', form) + card('🎯 To hit my target', '', '<div id="fn"></div>') + '</section>';
+    el.innerHTML = '<section class="tiles" id="ft"></section><section class="grid2b">' + card('About me', 'type to explore', form) + card('To hit my target', '', '<div id="fn"></div>') + '</section>';
     function num(id) { var x = parseFloat(document.getElementById(id).value); return isNaN(x) ? null : x; }
     function draw() {
       var age = num('fa'), stop = num('fs'), want = num('fw'), saved = num('fp') || 0, monthly = num('fm') || 0;
