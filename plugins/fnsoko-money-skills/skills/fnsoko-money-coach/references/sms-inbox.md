@@ -31,7 +31,7 @@ So when you process the inbox, also look at **Money Log rows with Added by `SMS`
 
 Walk them through it one step at a time. Wait for "done" before the next step.
 
-1. **Get a planner with the SMS Inbox.** Make a copy of the SMS-ready planner: https://docs.google.com/spreadsheets/d/1Fb0n-PXVEvoOjDiSHcSHXy6FjuaA6O8pRQlEPu_XDU8/copy. The copy brings the SMS Inbox tab and its script along. If they already keep a planner without an SMS Inbox tab, they start from this copy, and their earlier rows can be copied across by hand (white boxes only).
+1. **Get a planner with the SMS Inbox.** Make a copy of the SMS-ready planner: https://docs.google.com/spreadsheets/d/1mrwU5XZhVREIratO49QUjQzJqZSXxQ9JJP2mJ8HCiig/copy. The copy brings the SMS Inbox tab and its script along. If they already keep a planner without an SMS Inbox tab, they start from this copy, and their earlier rows can be copied across by hand (white boxes only).
 2. **Time zone:** File > Settings > Time zone > (GMT+03:00) Nairobi.
 3. **Deploy the link** (computer browser, signed in to **one** Google account only, ideally a private window):
    Extensions > Apps Script > **Deploy > New deployment** > gear > **Web app** > Execute as **Me** > Who has access **Anyone** > Deploy > Authorize > choose the account > **Advanced > Go to project (unsafe) > Allow**.
