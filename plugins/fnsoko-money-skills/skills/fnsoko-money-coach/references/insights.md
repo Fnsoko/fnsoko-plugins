@@ -21,7 +21,7 @@ Use it:
 - Money Log `B10:E2009` (date, category, amount, note)
 - My Budget `B10:O100` (B name, C usual, D..O = Jan..Dec, so D = Jan and N = Nov). Drop the section headings, the Category header rows and the Total rows. Short rows from the connector just mean empty months
 - My Money Profile `B23:E37` income and `B43:D72` must-pay with due day in D (v5: `B23:E28`, `B34:D43`)
-- Workings `C214` essentials, `C215` fund target, `C218` fund balance, `C196` ladder step, `B252:H263` goals (B name, D date, G target, H saved; include only goals with a target)
+- Workings `AG172` Future step for now (planners from 14 Nov 2026; empty on older copies), `C214` essentials, `C215` fund target, `C218` fund balance, `C196` ladder step, `B252:H263` goals (B name, D date, G target, H saved; include only goals with a target)
 - My Loans `C17:I24` (C name, F owe, G rate, H per year/month, I minimum payment) and `H9:H11` (plan start, extra a month, method)
 - Month-End Check `E16:P23` (balances, Jan..Dec) and `I31:I42` (not logged, Jan..Dec); My Emergency Fund `H8` (months) and `H11` (fund category); My Money Ladder `G30`
 - For the extra dashboard tabs: Workings `C222:C226` (fund pace), `B251:M263` (goal status: L per month, K months left, M status), `C296:C304` and `O287:O294` (debt plan), `D134:O137` (net worth own / owe / net / month typed) with `B150:C159` (own by type), `C147:C148`; My Future `C6:C13`
@@ -40,7 +40,7 @@ Use it:
  "goals": [{"name": "Laptop", "target": 80000, "saved": 10000, "date": "2027-06-30"}],
  "loans": [{"name": "Mobile loans", "owe": 5000, "rate": 0.075, "per": "month", "payment": 1500}],
  "month_end_balances": {"10": 7000}, "not_logged": {"10": 2500},
- "ladder_step": 2, "expensive_from": 0.2,
+ "ladder_step": 2, "expensive_from": 0.2, "future_step": "10%",
  "loan_plan": {"start": "Nov 2026", "extra": 0, "method": "Avalanche: highest interest first", "debt_free_by": "Feb 2027", "months": 4,
                "interest_plan": 968, "debt_free_by_min": "Feb 2027", "interest_min": 968, "interest_saved": 0, "months_sooner": 0,
                "pay_this_month": [{"name": "Mobile loans", "pay": 1500}]},
@@ -69,7 +69,7 @@ Always start with **coverage**: "Based on what's logged (about 96% of October)",
 | **What-ifs** (`what_ifs`) | Moving X a month from a category to the emergency fund, each goal, or extra loan payments | "Move KSh 2,000 a month from Eating out: emergency fund full in 21 months instead of 35, or the Laptop in 18 instead of 35, or debt-free 2 months sooner with KSh 450 less interest." Offer 2-3 amounts they pick; they choose where it goes. Ask permission before running a what-if on a Need |
 | **Cash crunch** (`cash_crunch`) | Bills due before the main income arrives (due days from the Profile) | "Rent (5th) and Wi-Fi (3rd) are due before your salary (25th): KSh 21,000 that has to come from last month's money." Suggest keeping it aside on payday, or asking to move a due date. If `bills_missing_due_day`, ask for the due days |
 | **Payday pattern** (`patterns`) | Share of the month's spending in the 5 days after payday; the busiest day | "About a quarter of your spending happens in the 5 days after payday." Tip: pay yourself first, moving savings out on payday before spending starts |
-| **Health check** (`health`) | Month by month: savings rate, debt payments ÷ income, fees ÷ spending, needs/wants/future; emergency months now | Show it as a small table with arrows (↑ ↓ →) against the guides. A month still in progress has no ratios. Say what improved first |
+| **Health check** (`health`) | Month by month: savings rate, debt payments ÷ income, fees ÷ spending, needs/wants/future; emergency months now; `future_step` when the planner has one | Show it as a small table with arrows (↑ ↓ →) against the guides. Future is measured against their step first ("10% for now, on the way to 20%"), then the 20% guide. A month still in progress has no ratios. Say what improved first |
 | **Investing readiness** (`investing`) | Ladder step; money sitting in spending accounts beyond one month of essentials | Before step 4: "Investing comes after the buffer and expensive debt. Here's why." From step 4: explain options (money market funds, T-bills, SACCOs, bonds) and their trade-offs in simple words. Get current rates (see `money-math.md`). **Never name a fund, provider or product to buy** |
 
 ## 3. Formats

@@ -11,6 +11,8 @@ Run calculations in code. State every assumption. Label results ESTIMATED.
 | Emergency fund target | months (3-6) × monthly essentials (Needs) |
 | Months of cover | emergency fund ÷ monthly essentials |
 | 50/30/20 | Needs ÷ money in, Wants ÷ money in, Future (savings + investments) ÷ money in. Loan repayments count as Needs |
+| Future step | typical (median) Future share of the 3 months before the latest month + 3 points, at least 5% and at most 20%; 10% with no history. Their own number on My 50-30-20 D12 replaces it |
+| Amount to reach the step | step × money in − Future this month |
 | Lifestyle creep | growth in Wants vs growth in money in, this month vs the average of the 3 months before |
 | Yearly rate from monthly | about monthly × 12 (simple); true cost (1 + monthly)^12 − 1 (e.g. 7.5% a month ≈ 90% simple, 138% compounded) |
 | Goal monthly amount | (target − saved) ÷ months left (no returns unless asked) |

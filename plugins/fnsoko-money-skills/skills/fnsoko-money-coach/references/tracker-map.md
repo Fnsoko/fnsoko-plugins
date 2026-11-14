@@ -4,6 +4,12 @@ White boxes = the person types. **Green boxes fill themselves** from My Money Pr
 
 v6 has 17 tabs (the SMS-ready copy adds an 18th, SMS Inbox, after Money Log): Start Here (with the Ask Claude prompts at the bottom), My Money Ladder, Setup, My Money Profile, My Budget, Money Log, My Rules, This Month, Month-End Check (with the reflections at the bottom), My 50-30-20, My Year, My Net Worth, My Emergency Fund (deposits log at the bottom), My Goals (goal cards, then deposits log), My Loans (debt-free plan, then the month-by-month schedule), My Future, Workings (all the maths).
 
+**Planner additions (14 Nov 2026, still v6):** Start Here has a "first 10 minutes" box and a tab picker (named range `FnsokoTabPicker`, Start Here D32; works on the phone app). My Money Profile has a payslip calculator at the bottom (gross C123; rates C127 NSSF upper limit, C128 SHIF, C129 housing levy, C130 personal relief; result B124, ESTIMATED). My Budget B7 shows the plan's split, the Future step and money to set aside for bigger months. Message lines now give amounts and dates: My Emergency Fund B28, My Goals B37 (goals need vs average saving), My Loans B35, My Net Worth B9 and M6:M7 (change since last month), My Year B9 (savings at this pace). The script menu also has a weekly summary email and "Start my next year's planner" (copies the file, carries balances, goal savings, fund, net worth items; Money Log starts empty).
+
+**Doubles (14 Nov 2026):** Money Log G6:G7 "Possible doubles" = rows with the same date and amount where one is Added by SMS and one isn't; those rows are highlighted yellow. Month-End Check messages now say a gap can also mean something was logged twice.
+
+**Plain words in the planner (14 Nov 2026):** Month-End Check shows "✅ Adds up" / "Something's missing" / "Not checked yet" (I7, J31:J42) where older copies say VERIFIED / PROVISIONAL / ESTIMATED; they mean the same. Use the planner's words with the person. "Essentials" is now "must-pay costs" on My Emergency Fund and the Money Ladder. Start Here folds "More on how it works", most tips and the Ask Claude prompts (click + on the left); My Money Profile folds "Still to find out" and the payslip rates.
+
 **Hidden tabs (template from 14 Nov 2026):** a new copy opens with only Start Here, Setup, My Money Profile, My Budget, Money Log and This Month showing. The rest are hidden, not removed: their formulas still work and the Sheets connector still reads them. SMS Inbox and My Rules show themselves when the first SMS arrives; Workings stays hidden. When you send someone to a hidden tab, tell them how to see it: **Fnsoko (top menu) > Show all my tabs** (or Show my month-end tabs / Show my savings and debt tabs), or the **☰** button at the bottom left, then the tab name.
 
 ## How the tabs feed each other
@@ -72,7 +78,7 @@ Savings into the emergency fund use the category chosen in My Emergency Fund H11
 | Month-End Check | B16:P23 | Spending accounts: Account, Type, Start (1 Jan), Jan..Dec end-of-month balances (E..P) |
 | | C28 | Small gap I'm OK with |
 | | C57:K68, C73:K76 | Reflections: monthly (C priorities, F went well, I do better) and quarterly (C, F, I), each merged across 3 columns |
-| My 50-30-20 | D6; E54, E55 | Month (empty = latest); extra income, share to Future |
+| My 50-30-20 | D6; D12; E56, E57 | Month (empty = latest); Future step for now (empty = suggested, Workings AG171; in use AG172); extra income, share to Future |
 | My Net Worth | B32:O42, B51:O59 | What I own / owe by month; rows 30, 31, 43, 44 and 60 fill themselves |
 | My Emergency Fund | H8, H10 | Months to cover (3-6), where it's kept (H9 currency follows Setup) |
 | | H11, H20 | Money Log category for the fund; use budget Needs (Yes/No) |

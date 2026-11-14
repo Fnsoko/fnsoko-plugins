@@ -30,14 +30,14 @@ Run these checks as facts arrive: the leak; emergency cover; whether stated inco
 2. Order: must-pay → minimum debt payments → savings and goals (emergency fund first) → everyday → buffer.
 3. Every shilling gets a job. Show money left or the gap.
 4. Never drop a required bill to make it fit. For a gap, give up to 3 choices.
-5. Show the planned 50/30/20 split and say where it differs from the guide, without pressure.
+5. Show the planned 50/30/20 split. Plan Future at least at their **Future step** (My 50-30-20 D12, or the suggestion), and show how far that is from the 20% guide, without pressure.
 6. Output a table that matches My Budget's sections and their Setup categories. Label it ESTIMATED if any input is a guess.
 
 ## §3 Month-end review
 
 1. **Does it add up?** Use the planner's Month-End Check. If they imported statements, the balances for those accounts are already there (`statement-import.md` step 6): ask only for cash and accounts without a statement. VERIFIED, PROVISIONAL (with the amount not logged and where to look: small M-Pesa payments, fees, cash) or ESTIMATED (no balances). Never call a month verified yourself.
 2. **Plan vs actual** where both exist. The 3 biggest differences.
-3. **50/30/20** and the **lifestyle check** (this month vs the 3 months before). If Wants grew faster than income, name it as lifestyle creep, kindly.
+3. **50/30/20, the Future step** and the **lifestyle check** (this month vs the 3 months before). Say Future against their step, then against the 20% guide, in shillings. If they reached their step two months in a row, suggest the next one (+3 points, up to 20%); they type it on My 50-30-20 D12 or leave it empty for the planner's suggestion. Needs over 50% are information, not something to cut. If Wants grew faster than income, name it as lifestyle creep, kindly.
 4. **Ladder**: the step and one next move.
 5. **Insights** (`insights.md`): run `insights --month YYYY-MM` and add the leaks, the health-check trend and one what-if. Close with the **month letter** (`insights.md` §3).
 6. **One lesson, up to 3 actions with dates.** Short answers to copy into the reflections at the bottom of Month-End Check (priorities, what went well, what to do better).

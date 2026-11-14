@@ -426,6 +426,37 @@ def parse_file(path, account=None, currency=None):
     return rows, None
 
 
+def receipt_hash(code):
+    """One-way hash of an M-Pesa receipt code, so a statement row can be matched to its SMS without keeping the code."""
+    code = str(code or '').strip().upper()
+    return hashlib.sha1(code.encode()).hexdigest()[:16] if RE_RECEIPT.fullmatch(code) else None
+
+
+RE_SMS_AMOUNT = re.compile(r'K(?:sh|ES)\.?\s?([\d,]+(?:\.\d{1,2})?)', re.I)
+RE_SMS_DATE = re.compile(r'(?:^|[^a-z])on\s*(\d{1,2})/(\d{1,2})/(\d{2,4})\s*at', re.I)
+
+
+def sms_facts(messages):
+    """From SMS Inbox texts that were logged: receipt hash, date and amount of each M-Pesa transaction.
+    The codes themselves are not kept."""
+    out = []
+    for m in messages:
+        t = re.sub(r'\s+', ' ', str(m or '')).strip().lstrip("'")
+        code = t[:10].upper()
+        if not RE_RECEIPT.fullmatch(code) or not re.search(r'confirmed', t, re.I):
+            continue
+        am, dm = RE_SMS_AMOUNT.search(t), RE_SMS_DATE.search(t)
+        d = None
+        if dm:
+            y = int(dm.group(3)); y = y + 2000 if y < 100 else y
+            try:
+                d = dt.date(y, int(dm.group(2)), int(dm.group(1))).isoformat()
+            except ValueError:
+                d = None
+        out.append({'receipt_h': receipt_hash(code), 'date': d, 'amount': to_amount(am.group(1)) if am else None})
+    return out
+
+
 def finish_rows(rows, fx):
     out = []
     for r in rows:
@@ -440,7 +471,8 @@ def finish_rows(rows, fx):
                     'in': round(r['in'] * rate, 2) if rate else r['in'], 'out': round(r['out'] * rate, 2) if rate else r['out'],
                     'balance': round(r['balance'] * rate, 2) if (r['balance'] is not None and rate) else r['balance'],
                     'note': note, 'counterparty': cp, 'kind': kind, 'paybill': paybill,
-                    'match_text': (r['raw_upper_clean']), 'dup_key': h, 'source': r['source'], 'head': head_of(r['raw'])})
+                    'match_text': (r['raw_upper_clean']), 'dup_key': h, 'source': r['source'], 'head': head_of(r['raw']),
+                    'receipt_h': receipt_hash(r['receipt'])})
     return out
 
 
@@ -518,13 +550,21 @@ def planner_info(path):
         if b or c or d:
             last = r
             dd = to_date(b)
-            existing.append({'date': dd.strftime('%Y-%m-%d') if dd else None, 'category': c, 'amount': d})
+            existing.append({'date': dd.strftime('%Y-%m-%d') if dd else None, 'category': c, 'amount': d,
+                             'added_by': str(ml[f'F{r}'].value or '').strip()})
+    sms = []
+    if 'SMS Inbox' in wb.sheetnames:
+        si = wb['SMS Inbox']
+        for r in range(7, si.max_row + 1):
+            msg, logged = si[f'C{r}'].value, si[f'D{r}'].value
+            if msg and logged not in (None, '') and not str(logged).startswith('Skipped'):
+                sms.append(str(msg))
     me = wb['Month-End Check']
     accounts = [{'row': r, 'name': me[f'B{r}'].value, 'type': me[f'C{r}'].value} for r in range(16, 24)]
     year = su['C6'].value
     return {'version': ver, 'year': year, 'currency': su['C7'].value, 'categories': cats, 'specials': SPECIALS,
             'rules': rules, 'ef_category': ef, 'goals': goals, 'existing': existing, 'last_row': last,
-            'accounts': accounts}, wb
+            'accounts': accounts, 'sms': sms}, wb
 
 
 def cmd_check(a):
@@ -591,6 +631,49 @@ def cmd_sort(a):
         seen.add(t['dup_key'])
         uniq.append(t)
     tx = uniq
+    # 1b. already logged from the SMS Inbox. Same M-Pesa receipt code = same transaction (exact).
+    #     The fee that goes with it is skipped too: same code, or a charge row within 5 minutes after it.
+    sms_msgs = list(info.get('sms') or [])
+    if getattr(a, 'sms', None):
+        raw = open(a.sms).read()
+        try:
+            extra = json.loads(raw)
+            sms_msgs += [str(x) for x in (extra if isinstance(extra, list) else [])]
+        except ValueError:
+            sms_msgs += [l for l in raw.splitlines() if l.strip()]
+    sms = sms_facts(sms_msgs)
+    sms_h = {x['receipt_h'] for x in sms if x['receipt_h']}
+    by_sms, kept = [], []
+    for t in tx:
+        (by_sms if t.get('receipt_h') in sms_h else kept).append(t)
+    for t in list(kept):
+        if re.search(r'charge|transaction cost|fee', t['match_text'], re.I) and any(
+                m['account'] == t['account'] and dt.timedelta(0) <= t['dt'] - m['dt'] <= dt.timedelta(minutes=5) for m in by_sms):
+            kept.remove(t); by_sms.append(t)
+    tx = kept
+    # 1c. likely doubles that can't be matched by code (bank texts, statements without codes): same amount,
+    #     within a day, as a Money Log row added by SMS. Not written; Claude asks the person.
+    sms_rows = [e for e in info['existing'] if e.get('added_by') == 'SMS' and e['date'] and isinstance(e['amount'], (int, float))]
+    possible, kept, used = [], [], set()
+    for t in tx:
+        hit = next((i for i, e in enumerate(sms_rows) if i not in used and abs(float(e['amount']) - t['amt']) < 0.01
+                    and abs((dt.date.fromisoformat(e['date']) - t['dt'].date()).days) <= 1), None)
+        if hit is None:
+            kept.append(t)
+        else:
+            used.add(hit)
+            possible.append({'date': t['dt'].strftime('%Y-%m-%d'), 'amount': t['amt'], 'direction': t['dir'], 'note': t['note'],
+                             'account': t['account'], 'matches_money_log': {k: sms_rows[hit][k] for k in ('date', 'category', 'amount')}})
+    tx = kept
+    # 1d. SMS rows the statement doesn't show (reversed, failed later, or another account): for the person to check.
+    mp = [t for t in by_sms + tx if t['account_type'] == 'M-Pesa']
+    st_h = {t.get('receipt_h') for t in pool if t.get('receipt_h')}
+    if mp:
+        lo, hi = min(t['dt'] for t in mp).date().isoformat(), max(t['dt'] for t in mp).date().isoformat()
+        sms_missing = [{'date': x['date'], 'amount': x['amount']} for x in sms
+                       if x['receipt_h'] and x['receipt_h'] not in st_h and x['date'] and lo <= x['date'] <= hi]
+    else:
+        sms_missing = []
     # 2. reversals cancel their original
     reversed_pairs = 0
     for t in tx:
@@ -819,8 +902,11 @@ def cmd_sort(a):
     ready.sort(key=lambda r: (r['date'], r['category']))
     res = {'ok': True, 'planner_year': info['year'], 'months': sorted({t['dt'].strftime('%Y-%m') for t in tx}),
            'ready': ready, 'questions': questions, 'triage': triage, 'balances': balances,
+           'possible_doubles': possible, 'sms_not_on_statement': sms_missing,
            'summary': {'transactions': len(pool), 'failed_skipped': failed, 'duplicates_skipped': dups,
                        'reversals_cancelled': reversed_pairs, 'refunds_cancelled': refunds, 'own_transfers': transfers,
+                       'already_logged_by_sms': len(by_sms), 'possible_doubles': len(possible),
+                       'sms_not_on_statement': len(sms_missing),
                        'ready_rows': len(ready), 'already_on_money_log': len(already), 'questions': len(questions),
                        'ask_now': len(triage['ask_now']), 'ask_later': triage['later'],
                        'outside_planner_year': len(outside), 'money_in': round(sum(r['amount'] for r in ready if group_of(r['category'], cats) == 'Income'), 2),
@@ -1082,7 +1168,14 @@ def insight_data_from_planner(path):
             'loans': loans, 'month_end_balances': balances, 'not_logged': not_logged,
             'ladder_step': int(step) if isinstance(step, (int, float)) else None,
             'expensive_from': to_amount(wb['My Money Ladder']['G30'].value) or 0.2,
+            'future_step': _future_step_cell(wk),
             **_extra_from_workbook(wb)}
+
+
+def _future_step_cell(wk):
+    """The person's Future step for now (Workings AG172, planners from 14 Nov 2026). None on older copies."""
+    v = wk['AG172'].value
+    return float(v) if isinstance(v, (int, float)) and 0 < v < 1 else None
 
 
 def _cell(ws, ref):
@@ -1228,6 +1321,8 @@ def _clean_data(data):
     st = to_amount(data.get('ladder_step'))
     d['ladder_step'] = int(st) if st else None
     d['expensive_from'] = _rate(data.get('expensive_from')) or 0.2
+    fs = data.get('future_step')
+    d['future_step'] = (_rate(fs) or None) if fs not in (None, '') else None
     bud = {}
     for c, v in (data.get('budget') or {}).items():
         if isinstance(v, dict):
@@ -1473,8 +1568,11 @@ def compute_insights(data, month=None, today=None, whatifs=()):
     ess = ef.get('essentials') or 0
     out['health'] = {'months': trend, 'note': 'A month still in progress has no ratios: income often lands at the end.',
                      'emergency_months': _r(ef.get('balance', 0) / ess) if ess else None,
+                     'future_step': data.get('future_step'),
                      'guides': {'savings_rate': '20% or more', 'debt_to_income': 'under 30%', 'emergency_months': '3 to 6',
-                                'needs': '50% or less', 'wants': '30% or less'}}
+                                'needs': '50% or less', 'wants': '30% or less',
+                                'future_step': (f"{round(data['future_step'] * 100)}% for now, on the way to 20%"
+                                                if data.get('future_step') else None)}}
 
     # 7. investing readiness (education only, never a product)
     step = data.get('ladder_step')
@@ -1632,6 +1730,7 @@ def main():
     c.add_argument('--me', help="the person's own name, removed from every line (found automatically on most statements)")
     c = s.add_parser('sort'); c.add_argument('parsed'); c.add_argument('--planner', required=True); c.add_argument('--out', required=True)
     c.add_argument('--month', nargs='*', help='only these months, e.g. 2026-10 (start with the last full month)')
+    c.add_argument('--sms', help='SMS Inbox texts (JSON list or one per line) when the planner file has no SMS Inbox, e.g. read through the Google Sheets connector')
     c = s.add_parser('write'); c.add_argument('sorted'); c.add_argument('--planner', required=True); c.add_argument('--answers')
     c.add_argument('--out', required=True); c.add_argument('--in-place', action='store_true')
     c = s.add_parser('export'); c.add_argument('sorted'); c.add_argument('--answers')

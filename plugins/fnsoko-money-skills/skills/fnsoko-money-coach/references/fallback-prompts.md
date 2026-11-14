@@ -10,7 +10,7 @@ These are the same prompts that are in the **Ask Claude** section at the bottom 
 | 4 | Review my month | §3 Month-end review |
 | 5 | Update my profile when life changes | §3 point 7 |
 | 6 | Double-check Claude | the honesty rules |
-| 7 | Check my 50/30/20 and lifestyle creep | §3 points 3 and 6 |
+| 7 | Check my 50/30/20, my Future step and lifestyle creep | §3 points 3 and 6 |
 | 8 | Talk me through my future | §4 retirement |
 | 9 | Log my SMS inbox (below; not on the Start Here tab yet) | sms-inbox.md Part 2 |
 | 10 | Show me where my money really goes (below; not on the Start Here tab yet) | insights.md §2 |

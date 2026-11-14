@@ -91,6 +91,7 @@ h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: var(--
 .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--bar); border-radius: 7px; }
 .ahead { position: absolute; top: 3px; bottom: 3px; background: var(--bar); opacity: .3; border-radius: 0 7px 7px 0; }
 .tick { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--plan); }
+.tick.step { background: none; border-left: 2px dotted var(--plan); }
 .flag { font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
 .flag::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--t4); color: var(--ink-2); }
@@ -249,7 +250,8 @@ svg text { fill: var(--ink-2); font-family: var(--font); font-size: 13px; }
   var T = D.totals || {}, H = D.health || {}, full = (H.months || []).filter(function (m) { return m.savings_rate != null; });
   var last = full.length ? full[full.length - 1] : null;
   var sr = D.in_progress ? (last ? last.savings_rate : null) : (T['in'] ? T.Future / T['in'] : null);
-  var srNote = D.in_progress ? (last ? 'last full month (' + short(last.month) + '). Guide: 20%+' : 'Guide: 20% or more') : 'Guide: 20% or more';
+  var stepTxt = H.future_step ? 'My step ' + Math.round(H.future_step * 100) + '% · guide 20%' : 'Guide: 20% or more';
+  var srNote = D.in_progress ? (last ? 'last full month (' + short(last.month) + '). ' + stepTxt : stepTxt) : stepTxt;
   var em = H.emergency_months;
   var tiles = [
     ['Money in', money(T['in']), D.in_progress ? 'so far this month' : 'this month', '💰'],
@@ -519,7 +521,7 @@ svg text { fill: var(--ink-2); font-family: var(--font); font-size: 13px; }
     }).join('') + '</div><div class="collabels">' + y.months.map(function (m) { return '<span>' + short(m.month) + (m.complete ? '' : '*') + '</span>'; }).join('') + '</div>' +
       '<div class="legend"><span><i class="sw" style="background:var(--needs)"></i>Money in</span><span><i class="sw" style="background:var(--wants)"></i>Money out</span><span>* month in progress</span></div>' +
       '<details><summary>Show as a table</summary><table><thead><tr><th>Month</th><th>In</th><th>Out</th><th>Saved</th><th>Saved %</th></tr></thead><tbody>' + y.months.map(function (m) { return '<tr><td>' + short(m.month) + '</td><td>' + money(m['in']) + '</td><td>' + money(m.out) + '</td><td>' + money(m.saved) + '</td><td>' + pct(m.savings_rate) + '</td></tr>'; }).join('') + '</tbody></table></details>';
-    var rate = '<div class="rows">' + full.map(function (m) { return '<div class="row"><span class="name">' + short(m.month) + '</span><div class="track" data-tip="' + esc(short(m.month) + ': saved ' + pct(m.savings_rate) + ' of income') + '"><span class="fill" style="width:' + Math.min(100, (m.savings_rate || 0) / 0.4 * 100) + '%;background:var(--future)"></span><span class="tick" style="left:calc(50% - 1px)"></span></div><span class="num">' + pct(m.savings_rate) + '</span></div>'; }).join('') + '</div><p class="note">The tick is the 20% guide.</p>';
+    var rate = '<div class="rows">' + full.map(function (m) { return '<div class="row"><span class="name">' + short(m.month) + '</span><div class="track" data-tip="' + esc(short(m.month) + ': saved ' + pct(m.savings_rate) + ' of income') + '"><span class="fill" style="width:' + Math.min(100, (m.savings_rate || 0) / 0.4 * 100) + '%;background:var(--future)"></span><span class="tick" style="left:calc(50% - 1px)"></span>' + (H.future_step && H.future_step < 0.2 ? '<span class="tick step" style="left:calc(' + (H.future_step / 0.4 * 100) + '% - 1px)"></span>' : '') + '</div><span class="num">' + pct(m.savings_rate) + '</span></div>'; }).join('') + '</div><p class="note">' + (H.future_step && H.future_step < 0.2 ? 'The dotted tick is my Future step (' + Math.round(H.future_step * 100) + '%); the solid tick is the 20% guide.' : 'The tick is the 20% guide.') + '</p>';
     el.innerHTML = h + '<section class="grid2">' + card('Money in and out', 'by month', chart) + card('Where most of it went', 'this year', hbars(y.top_spending.map(function (c) { return [c.category, c.total]; }))) + '</section>' +
       card('Share of income saved', 'by month', full.length ? rate : '<p class="note">Fills in once a month is finished.</p>');
   })();

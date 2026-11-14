@@ -31,11 +31,16 @@ Unlocked files only. If a statement is password-protected, the person opens it a
    - **First import: start with the last full month** (`--month`). A full M-Pesa statement often covers 3-6 months and 800+ rows. One month is about 200 rows and 25 questions, which is manageable. Do earlier months later, once My Rules has learnt their payees.
    This:
    - skips failed rows, duplicate statements and rows already on the Money Log
+   - **skips what the SMS automation already logged**: same M-Pesa receipt code as a logged SMS Inbox text (exact), plus its fee. The planner's SMS Inbox is read from the file; working through the Google Sheets connector, read SMS Inbox `C7:D` and pass the logged texts with `--sms texts.json` (a JSON list). Codes are only compared as one-way hashes; never repeat them
+   - lists `possible_doubles`: same amount within a day as a Money Log row added by SMS, but no code to prove it (bank texts, statements without codes). These are **not** written: ask "Is this the same as the SMS row from [date]?"
+   - lists `sms_not_on_statement`: logged SMS payments the statement doesn't show (reversed, failed later, another account). Ask about each
    - cancels reversals and refunds with the original
    - finds transfers between their own accounts
    - applies **My Rules** (first match wins, and the direction matters: a loan category on money in = Borrowed money; a savings category on money in = From my savings / From my emergency fund)
    - groups fees per account per month
    - lists `questions`, biggest first
+
+   **SMS users: check, don't re-import.** If the SMS Inbox covers the month (`already_logged_by_sms` > 0), say what you're doing: "Your SMS already logged most of October. I'll use the statement to check it: add only what's missing, and show anything that doesn't match." Lead the report with: already logged by SMS (count), added (count), possible doubles and SMS rows not on the statement (as questions), and the closing balances for the Month-End Check.
 
 4. **Ask** (max 3 questions per message, biggest first). Use `triage`:
    - Ask the `ask_now` questions first. They usually explain about 80-90% of the unsorted money.
