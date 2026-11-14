@@ -44,7 +44,7 @@ Walk them through it one step at a time. Wait for "done" before the next step.
      2. Make an **automation** for each kind of transaction message: Shortcuts > Automation > **+** > **Message** > **Message Contains** > one word or phrase > **Run Immediately** (Notify When Run off) > action **Run Shortcut** > Fnsoko SMS Inbox Automation, with the message as input.
      3. **One automation per keyword.** "Message Contains" takes one word or phrase. A list such as `M-PESA, Equity` does not work. Typical keywords: `M-PESA`, `Airtel Money`, and the name their bank uses in its transaction texts.
      4. Pick words that appear in **transaction confirmations**, not in login or one-time-PIN messages. A very broad word such as `KES` will forward OTPs into the Sheet.
-   - **Android:** MacroDroid (SMS Received trigger "contains M-PESA" → HTTP Request POST to the `/exec` link, body text/plain `[sms_message]`, battery Unrestricted). Steps are in the SMS setup guide; **not yet tested on a real Android phone**, so say so. If it doesn't work, use statement imports (`statement-import.md`).
+   - **Android:** MacroDroid (SMS Received trigger "contains M-PESA" → HTTP Request POST to the `/exec` link, body text/plain `[sms_message]`, battery Unrestricted). Steps are in the SMS setup guide; tested on a real Android phone (Nov 2026). Menu names vary a little by phone; if it doesn't work, use statement imports (`statement-import.md`).
 5. **Test:** make a small real transaction. A new row should appear in SMS Inbox within a minute. **Check the Sheet, not the phone:** Google redirects after saving, so the phone can show an error even when the row was added.
 6. **Connect Claude:** turn on the Google Sheets connector (and Gmail for summaries). Then process the inbox once with them (Part 2) and **recommend a schedule** (Part 3).
 
@@ -100,7 +100,7 @@ The automation only feels automatic when you check the inbox for them. At the en
 - **Where it runs depends on where they use Claude.** Tell them which applies:
   - **Claude app (Cowork) on any paid plan** (Pro, Max, Ultra, Team, Enterprise): scheduled tasks run in the cloud, on time, **even when their computer is asleep or the app is closed**. The run uses their connectors and installed plugins, so they need the Fnsoko plugin installed through the marketplace and the Google Sheets and Gmail connectors on. Keep the task to the planner and Gmail: a task that needs files on their computer only runs locally.
   - **Claude Code desktop app:** a local scheduled task only runs while the app is open and the computer is awake. A missed run happens once when the computer wakes. To run with the computer off, create a cloud scheduled task instead.
-  - **No Claude schedule at all?** The planner itself can email a short weekly summary: Fnsoko > Email me a weekly summary (needs the planner script from 14 Nov 2026).
+  - **No Claude schedule at all?** The planner itself can email a warm weekly summary (Sundays) and a month-end reminder for the money date (last day of the month), signed "With love, Fnsoko": Fnsoko > Email me weekly and month-end updates (planner script from 15 Nov 2026).
   - **Free plan:** no scheduled tasks. Give them the prompt to save and agree a weekly "money date" (same day, same time) to run it themselves.
   - These rules change. If unsure, check Claude's current help page on scheduling recurring tasks in Cowork.
 
