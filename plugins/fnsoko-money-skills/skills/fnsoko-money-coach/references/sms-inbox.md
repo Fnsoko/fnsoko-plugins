@@ -17,7 +17,15 @@ No server. The person needs a Google account, a phone, and Claude. Recommended C
 | B6:D6 | Header: Received, Message, Logged |
 | B7 down | **Received**: when the message reached the Sheet (Sheet time zone, set to Nairobi) · **Message**: the raw SMS, word for word · **Logged**: empty until you process it |
 
-The script saves **everything** the phone sends, raw. It does not filter. Deciding what is a transaction is your job.
+The script saves **everything** the phone sends, raw. It does not filter.
+
+**The planner sorts standard M-Pesa messages itself** (planner script from 14 Nov 2026; menu Fnsoko > Sort my SMS now). For each message it can read, it adds Money Log rows with **Added by = `SMS`** and fills in Logged:
+- category from My Rules, the transaction cost as its own row, Fuliza, withdrawals, deposits and M-Shwari moves handled as below
+- if the category isn't clear (money to or from a person with no rule), the row is added with the **category empty**, so the Money Log shows "⚠️ Pick a category", and the Note says who it was ("To JOHN DOE")
+- failed payments and non-payments get `Skipped: reason`
+- bank texts, reversals, other networks and a year that isn't on Setup stay **unlogged** for you
+
+So when you process the inbox, also look at **Money Log rows with Added by `SMS` and no category**: ask about them (interactive) or list them as questions (unattended), and offer a My Rules rule. Never re-log a message whose Logged is filled in. Deciding what the remaining messages are is your job.
 
 ## Part 1: Set up (once)
 
@@ -120,5 +128,5 @@ The automation only feels automatic when you check the inbox for them. At the en
 
 - The `/exec` link is a password. If it leaks, make a new deployment and archive the old one (Deploy > Manage deployments).
 - Their planner will hold raw messages with names and numbers. Keep their copy private. Never test with real messages on a planner shared by link.
-- Anyone can text them something containing the keyword and create a fake row. That's why rows say Added by Claude until they mark them Checked.
+- Anyone can text them something containing the keyword and create a fake row. That's why rows say Added by Claude or SMS until they mark them Checked.
 - **SMS for new money, statements for the past.** Importing a statement for the same weeks can double-count. You check for duplicates, but tell them anyway.

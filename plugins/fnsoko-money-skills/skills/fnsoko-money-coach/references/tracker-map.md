@@ -4,6 +4,8 @@ White boxes = the person types. **Green boxes fill themselves** from My Money Pr
 
 v6 has 17 tabs (the SMS-ready copy adds an 18th, SMS Inbox, after Money Log): Start Here (with the Ask Claude prompts at the bottom), My Money Ladder, Setup, My Money Profile, My Budget, Money Log, My Rules, This Month, Month-End Check (with the reflections at the bottom), My 50-30-20, My Year, My Net Worth, My Emergency Fund (deposits log at the bottom), My Goals (goal cards, then deposits log), My Loans (debt-free plan, then the month-by-month schedule), My Future, Workings (all the maths).
 
+**Hidden tabs (template from 14 Nov 2026):** a new copy opens with only Start Here, Setup, My Money Profile, My Budget, Money Log and This Month showing. The rest are hidden, not removed: their formulas still work and the Sheets connector still reads them. SMS Inbox and My Rules show themselves when the first SMS arrives; Workings stays hidden. When you send someone to a hidden tab, tell them how to see it: **Fnsoko (top menu) > Show all my tabs** (or Show my month-end tabs / Show my savings and debt tabs), or the **☰** button at the bottom left, then the tab name.
+
 ## How the tabs feed each other
 
 - **Money Log** (the only daily input) feeds This Month, My Year, Month-End Check, My 50-30-20, My Emergency Fund, Goals and the net-worth auto rows.
@@ -63,7 +65,7 @@ Savings into the emergency fund use the category chosen in My Emergency Fund H11
 | | B13:F27 | Categories: B Income, C Bills & Subscriptions, D Everyday, E Savings & Investments, F Debt Repayments (15 each, names unique) |
 | | C36:C50, E36:E50 | Need/Want for each Bills and Everyday category (same order) |
 | My Budget | C10:O24 / C29:O43 / C48:O62 / C67:O81 / C86:O100 | Income / Bills / Everyday / Savings / Debt; column C = usual each month, D..O = Jan..Dec overrides; rows follow Setup order |
-| Money Log | B10:F2009 | Date, Category, Amount (positive), Note, Added by (Claude / Me / Checked); G fills itself |
+| Money Log | B10:F2009 | Date, Category, Amount (positive), Note, Added by (Claude / Me / Checked / SMS: added by the planner's SMS sorter); G fills itself |
 | SMS Inbox *(SMS-ready planner only)* | B7:D | Received (filled by the script), Message (raw SMS, filled by the script), Logged (you: a date, or `Skipped: reason`). Header on row 6. No formula reads this tab, so it never changes the planner version. See `sms-inbox.md` |
 | My Rules | B12:D311 | Words to look for, Category, Notes (E checks the category exists) |
 | This Month | D6, J6 | Month to show, carry over Yes/No |
