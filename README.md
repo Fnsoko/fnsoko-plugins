@@ -74,7 +74,7 @@ Your phone can send every transaction SMS (M-Pesa, your bank, Airtel Money…) s
 1. Copy the **[SMS-ready Fnsoko Money Planner](https://docs.google.com/spreadsheets/d/1mrwU5XZhVREIratO49QUjQzJqZSXxQ9JJP2mJ8HCiig/copy)**. It includes the SMS Inbox tab and its script.
 2. In your copy: **Extensions → Apps Script → Deploy → New deployment → Web app** (Execute as Me, Who has access Anyone). Copy the link ending in `/exec`, and keep it private.
 3. **iPhone:** add the **[Fnsoko SMS Inbox Automation shortcut](https://www.icloud.com/shortcuts/44261bde5e94486da4ed7bfb3a656878)** and paste your `/exec` link when asked. Then make one automation per keyword: **Automation → Message → Message Contains** `M-PESA` (another for your bank's name) → Run Immediately → Run Shortcut.
-   **Android:** coming soon.
+   **Android:** install **MacroDroid** and add a macro: trigger **SMS Received** containing `M-PESA` (one more trigger per bank), action **HTTP Request**, POST to your `/exec` link with a text/plain body of `[sms_message]`. Set MacroDroid's battery use to **Unrestricted**. Tested on a real Android phone (Nov 2026); menu names vary a little by phone.
 4. In Claude, turn on the **Google Sheets** and **Gmail** connectors and say: *"Help me set up my SMS inbox."* The skill walks you through the rest and offers to schedule it.
 
 ## Privacy
