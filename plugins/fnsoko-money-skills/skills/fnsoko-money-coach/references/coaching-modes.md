@@ -20,7 +20,13 @@ After **every** round:
 5. "Still to check" list.
 6. The next 3 questions.
 
-If they say the rounds are done, stop asking. Give the final profile in My Money Profile's layout (`tracker-map.md`), ready to type or paste.
+If they say the rounds are done, stop asking. Then put the profile where it belongs:
+
+- **Planner connected and on a supported version** (Google Sheets connector, or the file is open): show the final profile in My Money Profile's layout and ask "Shall I fill this in for you?". On a yes, write it into the Profile's **white boxes only** (cells in `tracker-map.md`, Input cells): Why I'm doing this (C15:C17), Money coming in (C:G of rows 23-37), Must pay (C:F of rows 43-72), Money I owe (C:G of rows 78-85, with "per month" or "per year" in G), Savings & goals (C:G of rows 92-103, plus C91 for what the emergency fund holds now), My money rules (C107:C110) and Still to find out (C114:C118). Leave a box empty when they gave no answer; never write a guess.
+  - Match every line to the name already in column B. **Never type over column B, D91 or any formula.** If a name they need is not in column B, say which box to change on Setup (or offer to change it there), wait for the name to appear, then write its amounts.
+  - Put KNOWN, ESTIMATED or UNKNOWN in each row's "How sure?" box.
+  - Afterwards read the four totals at the top back from the planner (usual money in, money in a low month, must pay + debt payments, left in a low month) and say them in one sentence, so the person can see it landed. Say which boxes you filled and which you left empty.
+- **Not connected, an older or newer planner, or they would rather type it:** give the final profile in My Money Profile's layout, ready to type or paste.
 
 Run these checks as facts arrive: the leak; emergency cover; whether stated income matches the assets behind it (e.g. bond size × rate ÷ 2 per payout); lumpy income turned into a monthly average, with a warning that it arrives in lumps.
 
@@ -31,7 +37,7 @@ Run these checks as facts arrive: the leak; emergency cover; whether stated inco
 3. Every shilling gets a job. Show money left or the gap.
 4. Never drop a required bill to make it fit. For a gap, give up to 3 choices.
 5. Show the planned 50/30/20 split. Plan Future at least at their **Future step** (My 50-30-20 D12, or the suggestion), and show how far that is from the 20% guide, without pressure.
-6. Output a table that matches My Budget's sections and their Setup categories. Label it ESTIMATED if any input is a guess.
+6. Output a table that matches My Budget's sections and their Setup categories. Label it ESTIMATED if any input is a guess. With the planner connected, show the table and ask before writing; on a yes, write the amounts into My Budget's white boxes (never the green ones: those come from My Money Profile, so change them there). Otherwise give the table to type in.
 
 ## §3 Month-end review
 

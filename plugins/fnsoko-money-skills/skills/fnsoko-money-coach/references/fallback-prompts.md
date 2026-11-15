@@ -1,6 +1,8 @@
 # Copy-paste prompts (for people without skills)
 
-These are the same prompts that are in the **Ask Claude** section at the bottom of the planner's Start Here tab. They give the same outputs as this skill, so a class can mix people who have the skill with people who don't. If you change an output format in the skill, change it here and on the Ask Claude tab too.
+These are copy-paste prompts for people who cannot connect their planner to Claude. They give the same outputs as this skill, ready to type in, so a class can mix people who have the skill with people who don't. If you change an output format in the skill, change it here too.
+
+**The planner's own prompts changed on 15 Nov 2026.** The section at the bottom of Start Here is now called "Let AI help you fill this in" (it used to be "Ask Claude (optional)" and held prompts 1 to 3 below, word for word). Its three prompts now take the planner link and end "show me what you will write, then fill in … for me". With the Google Sheets connector, answer them through §1, §2 and `statement-import.md` and write to the planner; without it, fall back to the versions below.
 
 | # | Prompt | Same output as |
 |---|---|---|

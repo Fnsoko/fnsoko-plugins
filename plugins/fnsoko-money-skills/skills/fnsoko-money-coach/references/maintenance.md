@@ -18,7 +18,7 @@
 1. `python3 tests/run_tests.py` (add `--planner NEW.xlsx` to test a new planner). Every check must pass.
 2. With LibreOffice available, set `FNSOKO_RECALC` to recalculate the file, so the end-to-end check (Amina's October comes out VERIFIED) runs too.
 3. Run the conversation checklist in `tests/README.md` by hand on one persona.
-4. If you changed a prompt or an output format, update `fallback-prompts.md` and the Ask Claude prompts at the bottom of the planner's Start Here tab.
+4. If you changed a prompt or an output format, update `fallback-prompts.md` and the "Let AI help you fill this in" prompts at the bottom of the planner's Start Here tab (B76:C99, on the master, MAIN and any template).
 
 ## Adding a new bank or statement format
 

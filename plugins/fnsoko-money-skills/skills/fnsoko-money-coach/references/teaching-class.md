@@ -44,6 +44,6 @@ When asked for a worksheet, produce it in this pattern for the session requested
 - Start each session with the **ladder**: "Where are you on the ladder?" Hands up for steps 1-7.
 - Session 2 is where it clicks: show the "money not logged" figure on Amina, then let them find their own.
 - Some will have Fuliza or betting lines. Treat it matter-of-factly in class; take sensitive conversations aside.
-- Not everyone has a Claude plan with skills. Point them to the **Ask Claude** prompts at the bottom of Start Here (see `fallback-prompts.md`), which give the same outputs.
+- Not everyone has a Claude plan with skills. Give them the copy-paste prompts in `fallback-prompts.md`, which give the same outputs to type in. (The prompts at the bottom of the planner's Start Here tab, "Let AI help you fill this in", ask Claude to fill the planner and need the Google Sheets connector.)
 - Say every session: never share PINs, passwords, statement passwords or account numbers; never let AI guess amounts; check the maths yourself; save approved numbers in the planner.
 - **Measuring impact** (only with consent): the ladder step at session 1 and at +30 days, and the share of months that are VERIFIED. Use the opt-in usage log or a show of hands; never collect amounts.
