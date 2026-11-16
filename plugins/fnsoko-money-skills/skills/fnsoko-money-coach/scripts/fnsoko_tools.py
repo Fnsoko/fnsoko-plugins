@@ -1461,8 +1461,12 @@ def compute_insights(data, month=None, today=None, whatifs=()):
     ef = data.get('emergency_fund') or {}
     ef_cat = ef.get('category')
     def avg_into(cat):
-        ms = prev or [month]
-        return sum(x['amount'] for m in ms for x in by_month.get(m, []) if x['category'] == cat) / len(ms)
+        # the pace is the average of the last three finished months, the chosen month included once it has ended;
+        # a fund or goal first paid into during a month still in progress uses that month's deposits so far
+        into = lambda m: sum(x['amount'] for x in by_month.get(m, []) if x['category'] == cat)
+        ms = (prev + ([] if in_progress else [month]))[-3:] or [month]
+        avg = sum(into(m) for m in ms) / len(ms)
+        return avg if avg or not in_progress else into(month)
     whats = []
     for w in whatifs:
         cat, _, amt = w.rpartition(':')
