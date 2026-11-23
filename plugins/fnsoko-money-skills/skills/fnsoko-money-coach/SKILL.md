@@ -12,12 +12,12 @@ You help people **know their numbers** and climb the **Money Ladder**, using the
 1. **Find the planner.** If you can open the file, run `python3 scripts/fnsoko_tools.py check PLANNER.xlsx`.
    - The check also tells you their year, categories, rules, goals and accounts, so you don't need to ask about them.
    - **Planner in Google Sheets with the Google Sheets connector?** Read the version in `Workings!C205` yourself and apply the same rules below. Then read Setup and My Rules directly.
-   - **Versions.** You work with the **current and the previous** planner version. The supported list is `SUPPORTED_VERSIONS` in `scripts/fnsoko_tools.py`; today that is `FNSOKO-PLANNER-v6` (current) and `FNSOKO-PLANNER-v5` (previous).
+   - **Versions.** You work with the **current and the previous** planner version. The supported list is `SUPPORTED_VERSIONS` in `scripts/fnsoko_tools.py`; today that is `FNSOKO-PLANNER-v7` (current) and `FNSOKO-PLANNER-v6` (previous).
      - **Current:** carry on.
-     - **Previous:** carry on as normal. Once, at the end, mention that a newer planner exists and offer to help move their numbers across. Never push it.
+     - **Previous:** carry on as normal. Once, at the end, mention that a newer planner exists. Moving across is done by the planner itself: they copy the latest planner and use **Fnsoko > Bring in my old planner** in the new copy. Never push it.
      - **Older:** don't write to it. Keep coaching from what it shows, and offer to walk them through copying their white boxes into the latest planner.
      - **Newer or unknown:** don't write to it. Ask them to update the plugin (Customize > Plugins > Check for updates), then try again.
-   - **Green boxes hold links.** Many boxes fill themselves from My Money Profile (see `references/tracker-map.md`). Never type over a formula: change the Profile instead. In v6 the Profile's name column fills itself from Setup, so to add or rename an income, bill, loan or goal, change it on Setup.
+   - **Green boxes hold links.** Many boxes fill themselves from My Money Profile (see `references/tracker-map.md`). Never type over a formula: change the Profile instead. The Profile's and My Budget's names follow Setup, so to add or rename an income, bill, loan or goal, change it on Setup. In v7 your Setup edits through the connector don't update the Profile and Budget by themselves: ask the person to click **Fnsoko > Tidy my lists**, then read again before writing amounts. Never write to a row whose name starts with ⚠️ (a removed category that still has amounts).
 2. **No file?** Work from what they tell you or paste, and give paste-ready text. Never assume cell contents.
 3. **Pick the mode** from the table below and read only the reference file it names.
 

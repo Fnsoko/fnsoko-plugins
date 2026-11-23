@@ -19,8 +19,8 @@ from collections import defaultdict, OrderedDict
 # one before it. When a new planner version comes out, add it at the front, keep the previous one,
 # and drop the one before that. If the new version moves a cell this script reads or writes
 # (Setup categories, My Rules, Money Log, Month-End accounts, My Emergency Fund H11, My Goals C15:C26),
-# branch on info['version'] where that cell is used. See references/maintenance.md.
-SUPPORTED_VERSIONS = ('FNSOKO-PLANNER-v6', 'FNSOKO-PLANNER-v5')
+# add it to the layout table below (layout(ver)). See references/maintenance.md.
+SUPPORTED_VERSIONS = ('FNSOKO-PLANNER-v7', 'FNSOKO-PLANNER-v6')
 CURRENT_VERSION = SUPPORTED_VERSIONS[0]
 EXPECTED_VERSION = CURRENT_VERSION  # kept for older callers
 
@@ -43,7 +43,29 @@ def require_supported(ver, nothing_written=False):
         tail = ' Nothing was written.' if nothing_written else ''
         fail('VERSION', f"Planner version {ver} is not one this skill can write to ({', '.join(SUPPORTED_VERSIONS)}).{tail}")
 SPECIALS = ['Transfer between my accounts', 'Cash withdrawal', 'From my emergency fund', 'From my savings', 'Borrowed money']
-GROUP_COLS = OrderedDict([('Income', 'B'), ('Bills', 'C'), ('Everyday', 'D'), ('Savings', 'E'), ('Debt', 'F')])
+GROUP_COLS = OrderedDict([('Income', 'B'), ('Bills', 'C'), ('Everyday', 'D'), ('Savings', 'E'), ('Debt', 'F')])  # v5/v6
+
+# Where things sit in each planner version. v7 (Dec 2026): up to 50 categories per group with Need/Want
+# beside the Bills and Everyday names, 50-row Budget sections, longer Profile lists, Money Log to row 10009.
+_V6 = {
+    'setup_cols': GROUP_COLS, 'setup_rows': range(13, 28),
+    'needwant': [(r, n, t) for r in range(36, 51) for n, t in (('B', 'C'), ('D', 'E'))],
+    'log_last': 2009, 'budget_tops': (10, 29, 48, 67, 86), 'budget_size': 15,
+    'profile_income': range(23, 38), 'profile_mustpay': range(43, 73),
+}
+_V7 = {
+    'setup_cols': OrderedDict([('Income', 'B'), ('Bills', 'C'), ('Everyday', 'E'), ('Savings', 'G'), ('Debt', 'H')]),
+    'setup_rows': range(13, 63),
+    'needwant': [(r, n, t) for r in range(13, 63) for n, t in (('C', 'D'), ('E', 'F'))],
+    'log_last': 10009, 'budget_tops': (10, 64, 118, 172, 226), 'budget_size': 50,
+    'profile_income': range(23, 73), 'profile_mustpay': range(78, 138),
+}
+_V5 = dict(_V6, profile_income=range(23, 29), profile_mustpay=range(34, 44))
+
+
+def layout(ver):
+    """Cell layout for a planner version (unknown versions get the current layout, for reading only)."""
+    return {'FNSOKO-PLANNER-v5': _V5, 'FNSOKO-PLANNER-v6': _V6}.get(str(ver or '').strip(), _V7)
 
 
 # ----------------------------------------------------------------------------- helpers
@@ -532,8 +554,10 @@ def load_planner(path, data_only=False):
 def planner_info(path):
     wb = load_planner(path)
     ver = wb['Workings']['C205'].value if 'Workings' in wb.sheetnames else None
+    L = layout(ver)
     su = wb['Setup']
-    cats = OrderedDict((g, [su[f'{c}{r}'].value.strip() for r in range(13, 28) if su[f'{c}{r}'].value]) for g, c in GROUP_COLS.items())
+    cats = OrderedDict((g, [str(su[f'{c}{r}'].value).strip() for r in L['setup_rows'] if su[f'{c}{r}'].value
+                            and str(su[f'{c}{r}'].value).strip()]) for g, c in L['setup_cols'].items())
     rules = []
     rl = wb['My Rules']
     r = 12
@@ -545,7 +569,7 @@ def planner_info(path):
     goals = [wb['My Goals'][f'C{r}'].value for r in range(15, 27) if wb['My Goals'][f'C{r}'].value]
     ml = wb['Money Log']
     existing, last = [], 9
-    for r in range(10, 2010):
+    for r in range(10, L['log_last'] + 1):
         b, c, d = ml[f'B{r}'].value, ml[f'C{r}'].value, ml[f'D{r}'].value
         if b or c or d:
             last = r
@@ -564,7 +588,7 @@ def planner_info(path):
     year = su['C6'].value
     return {'version': ver, 'year': year, 'currency': su['C7'].value, 'categories': cats, 'specials': SPECIALS,
             'rules': rules, 'ef_category': ef, 'goals': goals, 'existing': existing, 'last_row': last,
-            'accounts': accounts, 'sms': sms}, wb
+            'accounts': accounts, 'sms': sms, 'log_last': L['log_last']}, wb
 
 
 def cmd_check(a):
@@ -968,7 +992,7 @@ def cmd_write(a):
     r = info['last_row'] + 1
     written = 0
     for row in rows:
-        if r > 2009:
+        if r > info['log_last']:
             break
         ml[f'B{r}'] = dt.datetime.strptime(row['date'], '%Y-%m-%d')
         ml[f'C{r}'] = row['category']
@@ -1098,24 +1122,24 @@ def insight_data_from_planner(path):
     info, _ = planner_info(path)
     wb = load_planner(path, data_only=True)
     ver = info['version']
+    L = layout(ver)
     su, ml = wb['Setup'], wb['Money Log']
     needs = {}
-    for r in range(36, 51):
-        for nc, tc in (('B', 'C'), ('D', 'E')):
-            n, t = su[f'{nc}{r}'].value, su[f'{tc}{r}'].value
-            if n:
-                needs[str(n).strip()] = str(t or 'Need').strip()
+    for r, nc, tc in L['needwant']:
+        n, t = su[f'{nc}{r}'].value, su[f'{tc}{r}'].value
+        if n and str(n).strip():
+            needs[str(n).strip()] = str(t or 'Need').strip()
     log = []
-    for r in range(10, 2010):
+    for r in range(10, L['log_last'] + 1):
         d, c, a, n = to_date(ml[f'B{r}'].value), ml[f'C{r}'].value, to_amount(ml[f'D{r}'].value), ml[f'E{r}'].value
         if d and c and a:
             log.append({'date': d.strftime('%Y-%m-%d'), 'category': str(c).strip(), 'amount': abs(a), 'note': n or ''})
     bu = wb['My Budget']
     budget = {}
-    for top in (10, 29, 48, 67, 86):
-        for r in range(top, top + 15):
+    for top in L['budget_tops']:
+        for r in range(top, top + L['budget_size']):
             n = bu[f'B{r}'].value
-            if not n:
+            if not n or str(n).startswith('⚠️'):
                 continue
             months = {}
             for i, col in enumerate('DEFGHIJKLMNO', start=1):
@@ -1124,14 +1148,14 @@ def insight_data_from_planner(path):
                     months[str(i)] = v
             budget[str(n).strip()] = {'usual': to_amount(bu[f'C{r}'].value) or 0, 'months': months}
     pr = wb['My Money Profile']
-    v6 = ver == 'FNSOKO-PLANNER-v6'
-    inc_rows, bill_rows = (range(23, 38), range(43, 73)) if v6 else (range(23, 29), range(34, 44))
+    inc_rows, bill_rows = L['profile_income'], L['profile_mustpay']
     income_expected = [{'name': pr[f'B{r}'].value, 'amount': to_amount(pr[f'D{r}'].value) or 0, 'kind': pr[f'C{r}'].value}
-                       for r in inc_rows if pr[f'B{r}'].value and to_amount(pr[f'D{r}'].value)]
+                       for r in inc_rows if pr[f'B{r}'].value and not str(pr[f'B{r}'].value).startswith('⚠️')
+                       and to_amount(pr[f'D{r}'].value)]
     bills_due = []
     for r in bill_rows:
         n, a, day = pr[f'B{r}'].value, to_amount(pr[f'C{r}'].value), to_amount(pr[f'D{r}'].value)
-        if n and a:
+        if n and a and not str(n).startswith('⚠️'):
             bills_due.append({'name': n, 'amount': a, 'day': int(day) if day and 1 <= day <= 31 else None})
     wk = wb['Workings']
     ef = {'essentials': to_amount(wk['C214'].value) or 0, 'target': to_amount(wk['C215'].value) or 0,

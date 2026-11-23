@@ -16,11 +16,11 @@ Use it:
 | In Google Sheets (connector) | Read the ranges below, build `data.json` in the shape below, then run `insights --data data.json`. If you can't run code, follow the same steps by hand and label the results ESTIMATED |
 | Not available | Ask them to paste this month's Money Log rows and their budget. Work from that only |
 
-**Ranges to read in Google Sheets** (v6; v5 differences in brackets):
-- Setup `B13:F27` (categories by group: B Income, C Bills, D Everyday, E Savings, F Debt) and `B36:E50` (Need/Want tags)
-- Money Log `B10:E2009` (date, category, amount, note)
-- My Budget `B10:O100` (B name, C usual, D..O = Jan..Dec, so D = Jan and N = Nov). Drop the section headings, the Category header rows and the Total rows. Short rows from the connector just mean empty months
-- My Money Profile `B23:E37` income and `B43:D72` must-pay with due day in D (v5: `B23:E28`, `B34:D43`)
+**Ranges to read in Google Sheets** (v7; v6 differences in brackets):
+- Setup `B13:H62` (B Income, C Bills, D Need/Want of C, E Everyday, F Need/Want of E, G Savings, H Debt) (v6: `B13:F27` with B Income, C Bills, D Everyday, E Savings, F Debt, and Need/Want tags in `B36:E50`)
+- Money Log `B10:E10009` (date, category, amount, note) (v6: to row 2009)
+- My Budget `B10:O275` (B name, C usual, D..O = Jan..Dec, so D = Jan and N = Nov) (v6: `B10:O100`). Drop the section headings, the Category header rows, the Total rows and rows whose name starts with ⚠️. Short rows from the connector just mean empty months
+- My Money Profile `B23:E72` income and `B78:D137` must-pay with due day in D (v6: `B23:E37`, `B43:D72`); skip ⚠️ rows
 - Workings `AG172` Future step for now (planners from 14 Nov 2026; empty on older copies), `C214` essentials, `C215` fund target, `C218` fund balance, `C196` ladder step, `B252:H263` goals (B name, D date, G target, H saved; include only goals with a target)
 - My Loans `C17:I24` (C name, F owe, G rate, H per year/month, I minimum payment) and `H9:H11` (plan start, extra a month, method)
 - Month-End Check `E16:P23` (balances, Jan..Dec) and `I31:I42` (not logged, Jan..Dec); My Emergency Fund `H8` (months) and `H11` (fund category); My Money Ladder `G30`
